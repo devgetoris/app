@@ -5,6 +5,8 @@ const isPublicRoute = createRouteMatcher([
   '/',
   '/sign-in(.*)',
   '/sign-up(.*)',
+  '/auth(.*)',
+  '/sso-callback(.*)',
   '/api/webhooks(.*)',
 ]);
 
@@ -20,7 +22,7 @@ export default clerkMiddleware(async (auth, request) => {
 
   // Require auth for protected routes
   if (!userId) {
-    const signInUrl = new URL('/sign-in', request.url);
+    const signInUrl = new URL('/auth/sign-in', request.url);
     signInUrl.searchParams.set('redirect_url', request.url);
     return NextResponse.redirect(signInUrl);
   }

@@ -31,7 +31,7 @@ export function LeadCard({ lead }: { lead: Lead }) {
         <div className="flex items-start gap-4">
           <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 flex-shrink-0">
             {lead.profilePhoto ? (
-              <Image
+              <img
                 src={lead.profilePhoto}
                 alt={fullName}
                 fill

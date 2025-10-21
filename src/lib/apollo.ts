@@ -7,6 +7,7 @@ export interface ApolloSearchParams {
   organization_locations?: string[];
   organization_num_employees_ranges?: string[];
   organization_industry_tag_ids?: string[];
+  q_organization_keyword_tags?: string[];
   page?: number;
   per_page?: number;
 }
@@ -167,6 +168,7 @@ class ApolloClient {
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-cache',
+        'X-Api-Key': apiKey,
       },
     });
   }
@@ -176,17 +178,33 @@ class ApolloClient {
    */
   async searchContacts(params: ApolloSearchParams): Promise<ApolloSearchResponse> {
     try {
+      console.log("Apollo API Request Body:", JSON.stringify(params, null, 2));
+      
       const response = await this.client.post<ApolloSearchResponse>(
         '/mixed_people/search',
-        {
-          api_key: this.apiKey,
-          ...params,
-        }
+        params
       );
+      
+      console.log("Apollo API Response:", {
+        total: response.data.pagination?.total_entries,
+        returned: response.data.contacts?.length || response.data.people?.length,
+      });
+      
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error(`Apollo API error: ${error.response?.data?.message || error.message}`);
+        console.error("Apollo API Error Details:", {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message,
+        });
+        
+        const errorMessage = error.response?.data?.message || 
+                           error.response?.data?.error || 
+                           JSON.stringify(error.response?.data) ||
+                           error.message;
+        throw new Error(`Apollo API error: ${errorMessage}`);
       }
       throw error;
     }
@@ -199,14 +217,20 @@ class ApolloClient {
     try {
       const response = await this.client.get<ApolloEnrichResponse>('/people/match', {
         params: {
-          api_key: this.apiKey,
           email,
         },
       });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error(`Apollo API error: ${error.response?.data?.message || error.message}`);
+        console.error("Apollo API Error Details:", {
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+        const errorMessage = error.response?.data?.message || 
+                           error.response?.data?.error || 
+                           error.message;
+        throw new Error(`Apollo API error: ${errorMessage}`);
       }
       throw error;
     }
@@ -217,15 +241,18 @@ class ApolloClient {
    */
   async getContactById(id: string): Promise<ApolloEnrichResponse> {
     try {
-      const response = await this.client.get<ApolloEnrichResponse>(`/people/${id}`, {
-        params: {
-          api_key: this.apiKey,
-        },
-      });
+      const response = await this.client.get<ApolloEnrichResponse>(`/people/${id}`);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error(`Apollo API error: ${error.response?.data?.message || error.message}`);
+        console.error("Apollo API Error Details:", {
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+        const errorMessage = error.response?.data?.message || 
+                           error.response?.data?.error || 
+                           error.message;
+        throw new Error(`Apollo API error: ${errorMessage}`);
       }
       throw error;
     }

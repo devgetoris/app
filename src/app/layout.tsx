@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LeadFlow - AI-Powered Lead Generation",
+  title: "Oris AI - AI-Powered Lead Generation",
   description: "Find leads, generate personalized emails, and grow your business with AI",
 };
 

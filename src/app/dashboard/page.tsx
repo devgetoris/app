@@ -5,23 +5,90 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+
+// Predefined options for multi-select
+const JOB_TITLES = [
+  "CEO", "CTO", "COO", "CFO",
+  "VP of Engineering", "VP of Sales", "VP of Marketing",
+  "Engineering Manager", "Product Manager", "Sales Manager",
+  "Director of Engineering", "Director of Sales", "Director of Marketing",
+  "Head of Product", "Head of Engineering", "Head of Sales",
+  "Software Engineer", "Senior Software Engineer", "Lead Developer",
+  "Marketing Manager", "Sales Representative", "Account Executive",
+].map(title => ({ label: title, value: title }));
+
+const INDUSTRIES = [
+  "Computer Software", "Information Technology", "Internet",
+  "Financial Services", "Banking", "Insurance",
+  "E-commerce", "Retail", "Consumer Goods",
+  "Healthcare", "Biotechnology", "Pharmaceuticals",
+  "Education", "EdTech", "Online Learning",
+  "Marketing", "Advertising", "Public Relations",
+  "Real Estate", "Construction", "Architecture",
+  "Manufacturing", "Logistics", "Supply Chain",
+  "Media", "Entertainment", "Gaming",
+  "Telecommunications", "Cloud Computing", "Cybersecurity",
+].map(industry => ({ label: industry, value: industry }));
+
+const COMPANY_SIZES = [
+  "1-10", "11-50", "51-200", "201-500", 
+  "501-1000", "1001-5000", "5001-10000", "10001+"
+].map(size => ({ label: `${size} employees`, value: size }));
+
+const LOCATIONS = [
+  "United States", "United Kingdom", "Canada", "Germany", "France",
+  "Netherlands", "Sweden", "Denmark", "Norway", "Finland",
+  "Australia", "New Zealand", "Singapore", "Hong Kong", "India",
+  "Japan", "South Korea", "Brazil", "Mexico", "Argentina",
+  "San Francisco", "New York", "Los Angeles", "Boston", "Seattle",
+  "London", "Berlin", "Amsterdam", "Paris", "Toronto",
+].map(location => ({ label: location, value: location }));
 
 export default function DashboardPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [searchParams, setSearchParams] = useState({
-    keywords: "",
-    jobTitles: "",
-    industries: "",
-    companySizes: "",
-    locations: "",
-  });
+  const [keywords, setKeywords] = useState("");
+  const [selectedJobTitles, setSelectedJobTitles] = useState<string[]>([]);
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+  const [selectedCompanySizes, setSelectedCompanySizes] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+
+  const clearAllFilters = () => {
+    setKeywords("");
+    setSelectedJobTitles([]);
+    setSelectedIndustries([]);
+    setSelectedCompanySizes([]);
+    setSelectedLocations([]);
+    toast.success("All filters cleared");
+  };
 
   const handleSearch = async () => {
+    // Validate that at least one search criterion is provided
+    const hasAnyCriteria = 
+      keywords.trim() ||
+      selectedJobTitles.length > 0 ||
+      selectedIndustries.length > 0 ||
+      selectedCompanySizes.length > 0 ||
+      selectedLocations.length > 0;
+
+    if (!hasAnyCriteria) {
+      toast.error("Please select at least one search criterion");
+      return;
+    }
+
     try {
       setLoading(true);
+
+      console.log("Sending search request:", {
+        keywords,
+        jobTitles: selectedJobTitles,
+        industries: selectedIndustries,
+        companySizes: selectedCompanySizes,
+        locations: selectedLocations,
+      });
 
       const response = await fetch("/api/apollo/search", {
         method: "POST",
@@ -29,27 +96,33 @@ export default function DashboardPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          keywords: searchParams.keywords,
-          jobTitles: searchParams.jobTitles.split(",").map(t => t.trim()).filter(Boolean),
-          industries: searchParams.industries.split(",").map(i => i.trim()).filter(Boolean),
-          companySizes: searchParams.companySizes.split(",").map(s => s.trim()).filter(Boolean),
-          locations: searchParams.locations.split(",").map(l => l.trim()).filter(Boolean),
+          keywords,
+          jobTitles: selectedJobTitles,
+          industries: selectedIndustries,
+          companySizes: selectedCompanySizes,
+          locations: selectedLocations,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to search leads");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to search leads");
       }
 
       const data = await response.json();
       
-      toast.success(`Found ${data.leads.length} leads!`);
-      
-      // Navigate to leads page
-      router.push("/dashboard/leads");
+      if (data.leads.length === 0) {
+        toast.warning("No leads found. Try using fewer filters or different criteria.", {
+          duration: 5000,
+        });
+      } else {
+        toast.success(`Found ${data.leads.length} leads!`);
+        // Navigate to leads page
+        router.push("/dashboard/leads");
+      }
     } catch (error) {
       console.error("Search error:", error);
-      toast.error("Failed to search leads. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Failed to search leads. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -115,67 +188,114 @@ export default function DashboardPage() {
       {/* Lead Search */}
       <Card>
         <CardHeader>
-          <CardTitle>Find New Leads</CardTitle>
-          <CardDescription>
-            Search for leads using Apollo API. We&apos;ll find the perfect prospects for your business.
-          </CardDescription>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <CardTitle>Find New Leads</CardTitle>
+              <CardDescription>
+                Search for leads using Apollo API. Start broad with 1-2 filters, then refine as needed.
+              </CardDescription>
+            </div>
+            {(selectedJobTitles.length + selectedIndustries.length + selectedCompanySizes.length + selectedLocations.length + (keywords ? 1 : 0)) > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {selectedJobTitles.length + selectedIndustries.length + selectedCompanySizes.length + selectedLocations.length + (keywords ? 1 : 0)} active
+              </Badge>
+            )}
+          </div>
+          <div className="mt-3 p-3 bg-muted rounded-lg text-sm">
+            <p className="font-medium mb-1">💡 Search Tips:</p>
+            <ul className="text-muted-foreground space-y-1 text-xs">
+              <li>• Use <strong>"Select All"</strong> or click multiple items at once for faster selection</li>
+              <li>• Start with just a <strong>Location</strong> or <strong>Job Title</strong> for broader results</li>
+              <li>• Combining multiple filters narrows your search significantly</li>
+              <li>• Click the X on badges to remove individual selections</li>
+            </ul>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="keywords">Keywords</Label>
-              <Input
-                id="keywords"
-                placeholder="e.g., software, marketing, sales"
-                value={searchParams.keywords}
-                onChange={(e) => setSearchParams({ ...searchParams, keywords: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="jobTitles">Job Titles</Label>
-              <Input
-                id="jobTitles"
-                placeholder="e.g., CEO, VP of Sales, Marketing Director"
-                value={searchParams.jobTitles}
-                onChange={(e) => setSearchParams({ ...searchParams, jobTitles: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="industries">Industries</Label>
-              <Input
-                id="industries"
-                placeholder="e.g., Technology, SaaS, E-commerce"
-                value={searchParams.industries}
-                onChange={(e) => setSearchParams({ ...searchParams, industries: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="companySizes">Company Sizes</Label>
-              <Input
-                id="companySizes"
-                placeholder="e.g., 11-50, 51-200"
-                value={searchParams.companySizes}
-                onChange={(e) => setSearchParams({ ...searchParams, companySizes: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="locations">Locations</Label>
-              <Input
-                id="locations"
-                placeholder="e.g., United States, Canada, United Kingdom"
-                value={searchParams.locations}
-                onChange={(e) => setSearchParams({ ...searchParams, locations: e.target.value })}
-              />
-            </div>
+        <CardContent className="space-y-6">
+          {/* Keywords */}
+          <div className="space-y-2">
+            <Label htmlFor="keywords">Keywords</Label>
+            <Input
+              id="keywords"
+              placeholder="e.g., AI, machine learning, cloud computing"
+              value={keywords}
+              onChange={(e) => setKeywords(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Search for specific keywords in profiles and companies
+            </p>
           </div>
 
-          <Button onClick={handleSearch} disabled={loading} size="lg">
-            {loading ? "Searching..." : "Search Leads"}
-          </Button>
+          {/* Job Titles */}
+          <div className="space-y-3">
+            <Label>Job Titles</Label>
+            <MultiSelect
+              options={JOB_TITLES}
+              onValueChange={setSelectedJobTitles}
+              defaultValue={selectedJobTitles}
+              placeholder="Select job titles"
+              variant="secondary"
+              maxCount={3}
+            />
+          </div>
+
+          {/* Industries */}
+          <div className="space-y-3">
+            <Label>Industries</Label>
+            <MultiSelect
+              options={INDUSTRIES}
+              onValueChange={setSelectedIndustries}
+              defaultValue={selectedIndustries}
+              placeholder="Select industries"
+              variant="secondary"
+              maxCount={3}
+            />
+          </div>
+
+          {/* Company Sizes */}
+          <div className="space-y-3">
+            <Label>Company Sizes</Label>
+            <MultiSelect
+              options={COMPANY_SIZES}
+              onValueChange={setSelectedCompanySizes}
+              defaultValue={selectedCompanySizes}
+              placeholder="Select company sizes"
+              variant="secondary"
+              maxCount={3}
+            />
+          </div>
+
+          {/* Locations */}
+          <div className="space-y-3">
+            <Label>Locations</Label>
+            <MultiSelect
+              options={LOCATIONS}
+              onValueChange={setSelectedLocations}
+              defaultValue={selectedLocations}
+              placeholder="Select locations"
+              variant="secondary"
+              maxCount={3}
+            />
+          </div>
+
+          <div className="pt-4 flex gap-3">
+            <Button 
+              onClick={handleSearch} 
+              disabled={loading} 
+              size="lg" 
+              className="flex-1"
+            >
+              {loading ? "Searching..." : "Search Leads"}
+            </Button>
+            <Button 
+              onClick={clearAllFilters} 
+              disabled={loading} 
+              variant="outline" 
+              size="lg"
+            >
+              Clear All
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

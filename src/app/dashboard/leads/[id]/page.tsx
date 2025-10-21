@@ -46,7 +46,7 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
           <div className="flex items-start gap-6">
             <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 flex-shrink-0">
               {lead.profilePhoto ? (
-                <Image
+                <img
                   src={lead.profilePhoto}
                   alt={fullName}
                   fill

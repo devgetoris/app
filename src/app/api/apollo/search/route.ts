@@ -41,16 +41,57 @@ export async function POST(request: NextRequest) {
 
     const apolloClient = getApolloClient();
     
-    // Search for leads
-    const response = await apolloClient.searchContacts({
-      q_keywords: keywords,
-      person_titles: jobTitles,
-      organization_industry_tag_ids: industries,
-      organization_num_employees_ranges: companySizes,
-      organization_locations: locations,
+    // Build search params - only include non-empty values
+    const searchParams: any = {
       page,
       per_page: perPage,
-    });
+    };
+
+    // Keywords - just pass them through
+    if (keywords && keywords.trim()) {
+      searchParams.q_keywords = keywords.trim();
+    }
+    
+    // Job Titles - Apollo accepts an array
+    if (jobTitles && Array.isArray(jobTitles) && jobTitles.length > 0) {
+      searchParams.person_titles = jobTitles;
+    }
+    
+    // Industries - use q_organization_keyword_tags which is more flexible
+    if (industries && Array.isArray(industries) && industries.length > 0) {
+      searchParams.q_organization_keyword_tags = industries;
+    }
+    
+    // Company Sizes - Apollo accepts an array
+    if (companySizes && Array.isArray(companySizes) && companySizes.length > 0) {
+      searchParams.organization_num_employees_ranges = companySizes;
+    }
+    
+    // Locations - Apollo accepts an array
+    if (locations && Array.isArray(locations) && locations.length > 0) {
+      searchParams.organization_locations = locations;
+    }
+
+    // Log the search parameters for debugging
+    console.log("Apollo Search Params:", JSON.stringify(searchParams, null, 2));
+    
+    // Validate that we have at least one search criterion
+    const hasSearchCriteria = 
+      searchParams.q_keywords ||
+      searchParams.person_titles ||
+      searchParams.organization_industry_tag_ids ||
+      searchParams.organization_num_employees_ranges ||
+      searchParams.organization_locations;
+
+    if (!hasSearchCriteria) {
+      return NextResponse.json(
+        { error: "Please provide at least one search criterion" },
+        { status: 400 }
+      );
+    }
+    
+    // Search for leads
+    const response = await apolloClient.searchContacts(searchParams);
 
     // Save leads to database
     const savedLeads = [];
