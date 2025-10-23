@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance } from "axios";
 
 export interface ApolloSearchParams {
   q_keywords?: string;
@@ -30,7 +30,7 @@ export interface ApolloContact {
   twitter_url?: string;
   facebook_url?: string;
   github_url?: string;
-  
+
   // Employment
   employment_history?: Array<{
     _id: string;
@@ -52,7 +52,7 @@ export interface ApolloContact {
     id: string;
     key: string;
   }>;
-  
+
   // Organization
   organization?: {
     id: string;
@@ -105,18 +105,18 @@ export interface ApolloContact {
       category: string;
     }>;
   };
-  
+
   // Additional fields
   seniority: string;
   departments: string[];
   subdepartments: string[];
   functions: string[];
-  
+
   // Contact info
   city: string;
   state: string;
   country: string;
-  
+
   // Education
   education?: Array<{
     _id: string;
@@ -164,11 +164,11 @@ class ApolloClient {
   constructor(apiKey: string) {
     this.apiKey = apiKey;
     this.client = axios.create({
-      baseURL: 'https://api.apollo.io/v1',
+      baseURL: "https://api.apollo.io/v1",
       headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
-        'X-Api-Key': apiKey,
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
+        "X-Api-Key": apiKey,
       },
     });
   }
@@ -176,20 +176,23 @@ class ApolloClient {
   /**
    * Search for contacts based on criteria
    */
-  async searchContacts(params: ApolloSearchParams): Promise<ApolloSearchResponse> {
+  async searchContacts(
+    params: ApolloSearchParams
+  ): Promise<ApolloSearchResponse> {
     try {
       console.log("Apollo API Request Body:", JSON.stringify(params, null, 2));
-      
+
       const response = await this.client.post<ApolloSearchResponse>(
-        '/mixed_people/search',
+        "/mixed_people/search",
         params
       );
-      
+
       console.log("Apollo API Response:", {
         total: response.data.pagination?.total_entries,
-        returned: response.data.contacts?.length || response.data.people?.length,
+        returned:
+          response.data.contacts?.length || response.data.people?.length,
       });
-      
+
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -199,11 +202,12 @@ class ApolloClient {
           data: error.response?.data,
           message: error.message,
         });
-        
-        const errorMessage = error.response?.data?.message || 
-                           error.response?.data?.error || 
-                           JSON.stringify(error.response?.data) ||
-                           error.message;
+
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          JSON.stringify(error.response?.data) ||
+          error.message;
         throw new Error(`Apollo API error: ${errorMessage}`);
       }
       throw error;
@@ -215,11 +219,14 @@ class ApolloClient {
    */
   async enrichContact(email: string): Promise<ApolloEnrichResponse> {
     try {
-      const response = await this.client.get<ApolloEnrichResponse>('/people/match', {
-        params: {
-          email,
-        },
-      });
+      const response = await this.client.get<ApolloEnrichResponse>(
+        "/people/match",
+        {
+          params: {
+            email,
+          },
+        }
+      );
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -227,9 +234,10 @@ class ApolloClient {
           status: error.response?.status,
           data: error.response?.data,
         });
-        const errorMessage = error.response?.data?.message || 
-                           error.response?.data?.error || 
-                           error.message;
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message;
         throw new Error(`Apollo API error: ${errorMessage}`);
       }
       throw error;
@@ -241,7 +249,9 @@ class ApolloClient {
    */
   async getContactById(id: string): Promise<ApolloEnrichResponse> {
     try {
-      const response = await this.client.get<ApolloEnrichResponse>(`/people/${id}`);
+      const response = await this.client.get<ApolloEnrichResponse>(
+        `/people/${id}`
+      );
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -249,9 +259,10 @@ class ApolloClient {
           status: error.response?.status,
           data: error.response?.data,
         });
-        const errorMessage = error.response?.data?.message || 
-                           error.response?.data?.error || 
-                           error.message;
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message;
         throw new Error(`Apollo API error: ${errorMessage}`);
       }
       throw error;
@@ -264,16 +275,14 @@ let apolloClient: ApolloClient | null = null;
 
 export function getApolloClient(): ApolloClient {
   if (!process.env.APOLLO_API_KEY) {
-    throw new Error('APOLLO_API_KEY environment variable is not set');
+    throw new Error("APOLLO_API_KEY environment variable is not set");
   }
-  
+
   if (!apolloClient) {
     apolloClient = new ApolloClient(process.env.APOLLO_API_KEY);
   }
-  
+
   return apolloClient;
 }
 
 export default ApolloClient;
-
-

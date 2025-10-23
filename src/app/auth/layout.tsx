@@ -40,17 +40,22 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           loop
           playsInline
         >
-          <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/alt-g7Cv2QzqL3k6ey3igjNYkM32d8Fld7.mp4" type="video/mp4" />
+          <source
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/alt-g7Cv2QzqL3k6ey3igjNYkM32d8Fld7.mp4"
+            type="video/mp4"
+          />
         </video>
-        
+
         {/* Black overlay */}
         <div className="absolute inset-0 bg-black/10"></div>
-        
+
         {/* Logo - Top Left */}
         <div className="absolute top-12 left-12 z-10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">O</span>
+              <span className="text-primary-foreground font-bold text-lg">
+                O
+              </span>
             </div>
             <span className="text-2xl font-bold text-primary">Oris AI</span>
           </div>
@@ -60,7 +65,10 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         <div className="absolute bottom-12 left-12 z-10">
           <div className="space-y-4">
             <blockquote className="text-lg text-slate-300 italic">
-              "Oris AI transformed our outreach process. We went from spending hours researching leads and writing emails to generating personalized, high-converting messages in seconds. Our response rates increased by 3x."
+              "Oris AI transformed our outreach process. We went from spending
+              hours researching leads and writing emails to generating
+              personalized, high-converting messages in seconds. Our response
+              rates increased by 3x."
             </blockquote>
             <div className="text-sm text-slate-400">
               — Sarah Chen, Growth Lead
@@ -71,9 +79,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 
       {/* Right Section - Auth Form */}
       <div className="flex-1 lg:w-2/5 bg-background flex items-center justify-center p-8 font-['Poppins']">
-        <div className="w-full max-w-md space-y-8">
-          {children}
-        </div>
+        <div className="w-full max-w-md space-y-8">{children}</div>
       </div>
     </div>
   );

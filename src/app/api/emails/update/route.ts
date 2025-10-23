@@ -9,10 +9,7 @@ export async function POST(request: NextRequest) {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -31,10 +28,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!email) {
-      return NextResponse.json(
-        { error: "Email not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Email not found" }, { status: 404 });
     }
 
     // Update email
@@ -50,9 +44,7 @@ export async function POST(request: NextRequest) {
     }
     if (status !== undefined) updateData.status = status;
 
-    await db.update(emails)
-      .set(updateData)
-      .where(eq(emails.id, emailId));
+    await db.update(emails).set(updateData).where(eq(emails.id, emailId));
 
     return NextResponse.json({
       success: true,
@@ -61,10 +53,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Email update error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to update email" },
+      {
+        error:
+          error instanceof Error ? error.message : "Failed to update email",
+      },
       { status: 500 }
     );
   }
 }
-
-

@@ -74,7 +74,7 @@ export default async function CampaignsPage() {
         </Card>
       ) : (
         <div className="grid gap-6">
-          {campaigns.map((campaign) => (
+          {campaigns.map(campaign => (
             <Card key={campaign.id}>
               <CardHeader>
                 <div className="flex items-start justify-between">

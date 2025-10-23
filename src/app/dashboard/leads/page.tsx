@@ -4,7 +4,13 @@ import { db } from "@/db";
 import { users, leads } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { LeadCard } from "@/components/leads/lead-card";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default async function LeadsPage() {
   const { userId } = await auth();
@@ -53,13 +59,14 @@ export default async function LeadsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Use the search feature on the dashboard to find and import leads from Apollo API.
+              Use the search feature on the dashboard to find and import leads
+              from Apollo API.
             </p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {allLeads.map((lead) => (
+          {allLeads.map(lead => (
             <LeadCard key={lead.id} lead={lead} />
           ))}
         </div>
@@ -67,5 +74,3 @@ export default async function LeadsPage() {
     </div>
   );
 }
-
-

@@ -9,10 +9,7 @@ export async function POST(request: NextRequest) {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -48,7 +45,8 @@ export async function POST(request: NextRequest) {
 
     if (existingUser) {
       // Update existing user
-      await db.update(users)
+      await db
+        .update(users)
         .set({
           companyName,
           industry,
@@ -74,24 +72,27 @@ export async function POST(request: NextRequest) {
       });
     } else {
       // Create new user
-      const [newUser] = await db.insert(users).values({
-        clerkId: userId,
-        email,
-        companyName,
-        industry,
-        companySize,
-        targetMarket,
-        marketingGoals,
-        targetJobTitles,
-        targetIndustries,
-        targetCompanySizes,
-        targetLocations,
-        preferredTone,
-        emailStyle,
-        callToActionTypes,
-        emailSignature,
-        onboardingCompleted: true,
-      }).returning();
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          clerkId: userId,
+          email,
+          companyName,
+          industry,
+          companySize,
+          targetMarket,
+          marketingGoals,
+          targetJobTitles,
+          targetIndustries,
+          targetCompanySizes,
+          targetLocations,
+          preferredTone,
+          emailStyle,
+          callToActionTypes,
+          emailSignature,
+          onboardingCompleted: true,
+        })
+        .returning();
 
       return NextResponse.json({
         success: true,
@@ -106,5 +107,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-

@@ -91,7 +91,7 @@ function evaluateRuleConditions(
   conditions: Array<{ field: string; operator: string; value: any }>
 ): boolean {
   // All conditions must be true (AND logic)
-  return conditions.every((condition) => {
+  return conditions.every(condition => {
     const leadValue = getLeadFieldValue(lead, condition.field);
     return evaluateCondition(leadValue, condition.operator, condition.value);
   });
@@ -139,7 +139,7 @@ function evaluateCondition(
         return leadValue.toLowerCase().includes(ruleValue.toLowerCase());
       }
       if (Array.isArray(leadValue)) {
-        return leadValue.some((v) =>
+        return leadValue.some(v =>
           v.toLowerCase().includes(ruleValue.toLowerCase())
         );
       }
@@ -150,7 +150,7 @@ function evaluateCondition(
         return !leadValue.toLowerCase().includes(ruleValue.toLowerCase());
       }
       if (Array.isArray(leadValue)) {
-        return !leadValue.some((v) =>
+        return !leadValue.some(v =>
           v.toLowerCase().includes(ruleValue.toLowerCase())
         );
       }

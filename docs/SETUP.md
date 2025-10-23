@@ -65,11 +65,13 @@ Before you begin, make sure you have:
 
 1. Install PostgreSQL on your machine
 2. Create a new database:
+
 ```sql
 CREATE DATABASE leadflow;
 ```
 
 3. Your connection string will be:
+
 ```
 postgresql://localhost:5432/leadflow
 ```
@@ -89,6 +91,7 @@ postgresql://localhost:5432/leadflow
 ## Step 3: Environment Variables
 
 1. Copy the example environment file:
+
 ```bash
 cp .env.example .env.local
 ```
@@ -124,11 +127,13 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ## Step 4: Install Dependencies
 
 Using Bun (faster):
+
 ```bash
 bun install
 ```
 
 Or using npm:
+
 ```bash
 npm install
 ```
@@ -136,16 +141,19 @@ npm install
 ## Step 5: Set Up Database Schema
 
 Generate the migration files:
+
 ```bash
 bun run db:generate
 ```
 
 Run the migrations:
+
 ```bash
 bun run db:migrate
 ```
 
 This will create all necessary tables in your database:
+
 - users
 - leads
 - email_campaigns
@@ -205,7 +213,8 @@ The application will be available at [http://localhost:3000](http://localhost:30
 4. Click "Send Now" to send
 5. Monitor the status
 
-**Important**: For testing, send emails only to your own email addresses until you're ready for production.
+**Important**: For testing, send emails only to your own email addresses until you're ready for
+production.
 
 ## Step 9: Configure Resend Webhook (Optional)
 
@@ -280,6 +289,7 @@ This opens Drizzle Studio in your browser where you can view and edit data.
 ### Database
 
 For production, use a managed database:
+
 - Neon (optimized for Vercel)
 - Supabase
 - AWS RDS
@@ -347,6 +357,3 @@ After setup:
 6. Train team members on the system
 
 Congratulations! Your LeadFlow application is now set up and ready to use.
-
-
-

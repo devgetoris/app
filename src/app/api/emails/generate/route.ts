@@ -11,10 +11,7 @@ export async function POST(request: NextRequest) {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get user from database
@@ -23,10 +20,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const body = await request.json();
@@ -38,10 +32,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!lead) {
-      return NextResponse.json(
-        { error: "Lead not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Lead not found" }, { status: 404 });
     }
 
     const openAIService = getOpenAIService();
@@ -54,7 +45,7 @@ export async function POST(request: NextRequest) {
       leadIndustry: lead.companyIndustry || undefined,
       leadBio: lead.bio || undefined,
       leadEmploymentHistory: lead.employmentHistory || undefined,
-      
+
       userCompany: user.companyName || undefined,
       userIndustry: user.industry || undefined,
       userGoals: user.marketingGoals || undefined,
@@ -64,18 +55,21 @@ export async function POST(request: NextRequest) {
 
     // Save email to database if requested
     if (saveAsDraft) {
-      const [newEmail] = await db.insert(emails).values({
-        userId: user.id,
-        leadId: lead.id,
-        campaignId,
-        subject: generatedEmail.subject,
-        body: generatedEmail.body,
-        htmlBody: generatedEmail.htmlBody,
-        tone: tone || user.preferredTone,
-        prompt: customPrompt,
-        status: "draft",
-        autoApproved: false,
-      }).returning();
+      const [newEmail] = await db
+        .insert(emails)
+        .values({
+          userId: user.id,
+          leadId: lead.id,
+          campaignId,
+          subject: generatedEmail.subject,
+          body: generatedEmail.body,
+          htmlBody: generatedEmail.htmlBody,
+          tone: tone || user.preferredTone,
+          prompt: customPrompt,
+          status: "draft",
+          autoApproved: false,
+        })
+        .returning();
 
       // Apply automation rules to determine if should auto-approve
       await applyAutomationToEmail(newEmail.id, user.id, lead.id);
@@ -98,9 +92,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Email generation error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to generate email" },
+      {
+        error:
+          error instanceof Error ? error.message : "Failed to generate email",
+      },
       { status: 500 }
     );
   }
 }
-

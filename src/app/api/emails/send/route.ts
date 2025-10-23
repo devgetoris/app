@@ -10,10 +10,7 @@ export async function POST(request: NextRequest) {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -25,10 +22,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!email) {
-      return NextResponse.json(
-        { error: "Email not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Email not found" }, { status: 404 });
     }
 
     // Get lead
@@ -45,7 +39,8 @@ export async function POST(request: NextRequest) {
 
     // If scheduled for later, just update the status
     if (scheduledAt) {
-      await db.update(emails)
+      await db
+        .update(emails)
         .set({
           status: "scheduled",
           scheduledAt: new Date(scheduledAt),
@@ -71,7 +66,8 @@ export async function POST(request: NextRequest) {
       });
 
       // Update email status
-      await db.update(emails)
+      await db
+        .update(emails)
         .set({
           status: "sent",
           sentAt: new Date(),
@@ -81,7 +77,8 @@ export async function POST(request: NextRequest) {
         .where(eq(emails.id, emailId));
 
       // Update lead status
-      await db.update(leads)
+      await db
+        .update(leads)
         .set({
           status: "contacted",
           updatedAt: new Date(),
@@ -94,10 +91,12 @@ export async function POST(request: NextRequest) {
       });
     } catch (sendError) {
       // Update email with error
-      await db.update(emails)
+      await db
+        .update(emails)
         .set({
           status: "failed",
-          errorMessage: sendError instanceof Error ? sendError.message : "Unknown error",
+          errorMessage:
+            sendError instanceof Error ? sendError.message : "Unknown error",
           updatedAt: new Date(),
         })
         .where(eq(emails.id, emailId));
@@ -107,10 +106,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Email send error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to send email" },
+      {
+        error: error instanceof Error ? error.message : "Failed to send email",
+      },
       { status: 500 }
     );
   }
 }
-
-

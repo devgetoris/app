@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -33,7 +39,7 @@ export default function AutomationPage() {
     try {
       const response = await fetch("/api/automation/rules");
       if (!response.ok) throw new Error("Failed to fetch rules");
-      
+
       const data = await response.json();
       setRules(data.rules);
     } catch (error) {
@@ -100,7 +106,11 @@ export default function AutomationPage() {
     }
   };
 
-  const formatCondition = (condition: { field: string; operator: string; value: any }) => {
+  const formatCondition = (condition: {
+    field: string;
+    operator: string;
+    value: any;
+  }) => {
     const operatorMap: Record<string, string> = {
       equals: "=",
       not_equals: "≠",
@@ -114,8 +124,8 @@ export default function AutomationPage() {
       less_than_or_equal: "≤",
     };
 
-    const value = Array.isArray(condition.value) 
-      ? condition.value.join(", ") 
+    const value = Array.isArray(condition.value)
+      ? condition.value.join(", ")
       : condition.value;
 
     return `${condition.field} ${operatorMap[condition.operator] || condition.operator} ${value}`;
@@ -134,7 +144,9 @@ export default function AutomationPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Automation Rules</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Automation Rules
+          </h1>
           <p className="text-muted-foreground mt-2">
             Define rules to automatically approve or review emails
           </p>
@@ -145,18 +157,23 @@ export default function AutomationPage() {
       {/* Info Card */}
       <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
         <CardHeader>
-          <CardTitle className="text-blue-900 dark:text-blue-100">How Automation Works</CardTitle>
+          <CardTitle className="text-blue-900 dark:text-blue-100">
+            How Automation Works
+          </CardTitle>
           <CardDescription className="text-blue-700 dark:text-blue-300">
-            Automation rules evaluate leads when emails are generated. Rules are checked in priority order (highest first).
-            When a lead matches a rule, the corresponding action is taken.
+            Automation rules evaluate leads when emails are generated. Rules are
+            checked in priority order (highest first). When a lead matches a
+            rule, the corresponding action is taken.
           </CardDescription>
         </CardHeader>
         <CardContent className="text-sm text-blue-700 dark:text-blue-300 space-y-2">
           <div>
-            <strong>Auto-send:</strong> Email is automatically approved and can be sent
+            <strong>Auto-send:</strong> Email is automatically approved and can
+            be sent
           </div>
           <div>
-            <strong>Manual review:</strong> Email requires your review before sending
+            <strong>Manual review:</strong> Email requires your review before
+            sending
           </div>
           <div>
             <strong>Skip:</strong> Email generation is skipped for this lead
@@ -179,7 +196,7 @@ export default function AutomationPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {rules.map((rule) => (
+          {rules.map(rule => (
             <Card key={rule.id}>
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -215,7 +232,10 @@ export default function AutomationPage() {
                   <div className="space-y-1">
                     {rule.conditions && rule.conditions.length > 0 ? (
                       rule.conditions.map((condition, index) => (
-                        <div key={index} className="text-sm bg-muted p-2 rounded">
+                        <div
+                          key={index}
+                          className="text-sm bg-muted p-2 rounded"
+                        >
                           {formatCondition(condition)}
                         </div>
                       ))
@@ -262,5 +282,3 @@ export default function AutomationPage() {
     </div>
   );
 }
-
-

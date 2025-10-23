@@ -1,16 +1,16 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
-import { NextResponse } from 'next/server';
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
-  '/',
-  '/sign-in(.*)',
-  '/sign-up(.*)',
-  '/auth(.*)',
-  '/sso-callback(.*)',
-  '/api/webhooks(.*)',
+  "/",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+  "/auth(.*)",
+  "/sso-callback(.*)",
+  "/api/webhooks(.*)",
 ]);
 
-const isOnboardingRoute = createRouteMatcher(['/onboarding(.*)']);
+const isOnboardingRoute = createRouteMatcher(["/onboarding(.*)"]);
 
 export default clerkMiddleware(async (auth, request) => {
   const { userId } = await auth();
@@ -22,8 +22,8 @@ export default clerkMiddleware(async (auth, request) => {
 
   // Require auth for protected routes
   if (!userId) {
-    const signInUrl = new URL('/auth/sign-in', request.url);
-    signInUrl.searchParams.set('redirect_url', request.url);
+    const signInUrl = new URL("/auth/sign-in", request.url);
+    signInUrl.searchParams.set("redirect_url", request.url);
     return NextResponse.redirect(signInUrl);
   }
 
@@ -41,10 +41,8 @@ export default clerkMiddleware(async (auth, request) => {
 export const config = {
   matcher: [
     // Skip Next.js internals and all static files, unless found in search params
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     // Always run for API routes
-    '/(api|trpc)(.*)',
+    "/(api|trpc)(.*)",
   ],
 };
-
-

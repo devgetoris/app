@@ -40,7 +40,7 @@ const JOB_TITLES = [
   "Marketing Manager",
   "Sales Representative",
   "Account Executive",
-].map((title) => ({ label: title, value: title }));
+].map(title => ({ label: title, value: title }));
 
 const INDUSTRIES = [
   "Computer Software",
@@ -73,7 +73,7 @@ const INDUSTRIES = [
   "Telecommunications",
   "Cloud Computing",
   "Cybersecurity",
-].map((industry) => ({ label: industry, value: industry }));
+].map(industry => ({ label: industry, value: industry }));
 
 const COMPANY_SIZES = [
   "1-10",
@@ -84,7 +84,7 @@ const COMPANY_SIZES = [
   "1001-5000",
   "5001-10000",
   "10001+",
-].map((size) => ({ label: `${size} employees`, value: size }));
+].map(size => ({ label: `${size} employees`, value: size }));
 
 const LOCATIONS = [
   "United States",
@@ -117,7 +117,7 @@ const LOCATIONS = [
   "Amsterdam",
   "Paris",
   "Toronto",
-].map((location) => ({ label: location, value: location }));
+].map(location => ({ label: location, value: location }));
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -320,7 +320,7 @@ export default function DashboardPage() {
               id="keywords"
               placeholder="e.g., AI, machine learning, cloud computing"
               value={keywords}
-              onChange={(e) => setKeywords(e.target.value)}
+              onChange={e => setKeywords(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
               Search for specific keywords in profiles and companies

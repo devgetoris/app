@@ -64,7 +64,7 @@ class ResendService {
   ): Promise<SendEmailResponse[]> {
     try {
       const results = await Promise.allSettled(
-        emails.map((email) => this.sendEmail(email))
+        emails.map(email => this.sendEmail(email))
       );
 
       return results
@@ -72,7 +72,7 @@ class ResendService {
           (result): result is PromiseFulfilledResult<SendEmailResponse> =>
             result.status === "fulfilled"
         )
-        .map((result) => result.value);
+        .map(result => result.value);
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Resend batch service error: ${error.message}`);

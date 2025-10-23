@@ -10,10 +10,7 @@ export async function POST(request: NextRequest) {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get user from database
@@ -22,10 +19,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const body = await request.json();
@@ -40,7 +34,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     const apolloClient = getApolloClient();
-    
+
     // Build search params - only include non-empty values
     const searchParams: any = {
       page,
@@ -51,22 +45,26 @@ export async function POST(request: NextRequest) {
     if (keywords && keywords.trim()) {
       searchParams.q_keywords = keywords.trim();
     }
-    
+
     // Job Titles - Apollo accepts an array
     if (jobTitles && Array.isArray(jobTitles) && jobTitles.length > 0) {
       searchParams.person_titles = jobTitles;
     }
-    
+
     // Industries - use q_organization_keyword_tags which is more flexible
     if (industries && Array.isArray(industries) && industries.length > 0) {
       searchParams.q_organization_keyword_tags = industries;
     }
-    
+
     // Company Sizes - Apollo accepts an array
-    if (companySizes && Array.isArray(companySizes) && companySizes.length > 0) {
+    if (
+      companySizes &&
+      Array.isArray(companySizes) &&
+      companySizes.length > 0
+    ) {
       searchParams.organization_num_employees_ranges = companySizes;
     }
-    
+
     // Locations - Apollo accepts an array
     if (locations && Array.isArray(locations) && locations.length > 0) {
       searchParams.organization_locations = locations;
@@ -74,9 +72,9 @@ export async function POST(request: NextRequest) {
 
     // Log the search parameters for debugging
     console.log("Apollo Search Params:", JSON.stringify(searchParams, null, 2));
-    
+
     // Validate that we have at least one search criterion
-    const hasSearchCriteria = 
+    const hasSearchCriteria =
       searchParams.q_keywords ||
       searchParams.person_titles ||
       searchParams.organization_industry_tag_ids ||
@@ -89,13 +87,13 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     // Search for leads
     const response = await apolloClient.searchContacts(searchParams);
 
     // Save leads to database
     const savedLeads = [];
-    
+
     for (const contact of response.people || response.contacts || []) {
       // Check if lead already exists for this user
       const existingLead = await db.query.leads.findFirst({
@@ -103,60 +101,63 @@ export async function POST(request: NextRequest) {
       });
 
       if (!existingLead) {
-        const [newLead] = await db.insert(leads).values({
-          userId: user.id,
-          apolloId: contact.id,
-          firstName: contact.first_name,
-          lastName: contact.last_name,
-          email: contact.email,
-          phone: contact.phone_numbers?.[0]?.sanitized_number,
-          title: contact.title,
-          seniority: contact.seniority,
-          departments: contact.departments,
-          
-          // Company info
-          companyName: contact.organization?.name,
-          companyDomain: contact.organization?.primary_domain,
-          companyIndustry: contact.organization?.industry,
-          companySize: String(contact.organization?.estimated_num_employees),
-          companyRevenue: contact.organization?.annual_revenue_printed,
-          companyLocation: contact.organization?.raw_address,
-          companyCity: contact.organization?.city,
-          companyState: contact.organization?.state,
-          companyCountry: contact.organization?.country,
-          companyFunding: contact.organization?.publicly_traded_symbol,
-          companyTechnologies: contact.organization?.technology_names,
-          
-          // Social profiles
-          linkedinUrl: contact.linkedin_url,
-          twitterUrl: contact.twitter_url,
-          facebookUrl: contact.facebook_url,
-          githubUrl: contact.github_url,
-          
-          // Additional data
-          profilePhoto: contact.photo_url,
-          bio: contact.headline,
-          employmentHistory: contact.employment_history?.map(job => ({
-            title: job.title || "",
-            company: job.organization_name || "",
-            startDate: job.start_date,
-            endDate: job.end_date,
-            current: job.current,
-          })),
-          education: contact.education?.map(edu => ({
-            school: edu.organization_name || "",
-            degree: edu.degree,
-            field: edu.major,
-            startDate: edu.start_date,
-            endDate: edu.end_date,
-          })),
-          
-          // Store full Apollo data for reference
-          apolloData: contact,
-          
-          // Initial status
-          status: "new",
-        }).returning();
+        const [newLead] = await db
+          .insert(leads)
+          .values({
+            userId: user.id,
+            apolloId: contact.id,
+            firstName: contact.first_name,
+            lastName: contact.last_name,
+            email: contact.email,
+            phone: contact.phone_numbers?.[0]?.sanitized_number,
+            title: contact.title,
+            seniority: contact.seniority,
+            departments: contact.departments,
+
+            // Company info
+            companyName: contact.organization?.name,
+            companyDomain: contact.organization?.primary_domain,
+            companyIndustry: contact.organization?.industry,
+            companySize: String(contact.organization?.estimated_num_employees),
+            companyRevenue: contact.organization?.annual_revenue_printed,
+            companyLocation: contact.organization?.raw_address,
+            companyCity: contact.organization?.city,
+            companyState: contact.organization?.state,
+            companyCountry: contact.organization?.country,
+            companyFunding: contact.organization?.publicly_traded_symbol,
+            companyTechnologies: contact.organization?.technology_names,
+
+            // Social profiles
+            linkedinUrl: contact.linkedin_url,
+            twitterUrl: contact.twitter_url,
+            facebookUrl: contact.facebook_url,
+            githubUrl: contact.github_url,
+
+            // Additional data
+            profilePhoto: contact.photo_url,
+            bio: contact.headline,
+            employmentHistory: contact.employment_history?.map(job => ({
+              title: job.title || "",
+              company: job.organization_name || "",
+              startDate: job.start_date,
+              endDate: job.end_date,
+              current: job.current,
+            })),
+            education: contact.education?.map(edu => ({
+              school: edu.organization_name || "",
+              degree: edu.degree,
+              field: edu.major,
+              startDate: edu.start_date,
+              endDate: edu.end_date,
+            })),
+
+            // Store full Apollo data for reference
+            apolloData: contact,
+
+            // Initial status
+            status: "new",
+          })
+          .returning();
 
         savedLeads.push(newLead);
       } else {
@@ -172,10 +173,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Apollo search error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to search leads" },
+      {
+        error:
+          error instanceof Error ? error.message : "Failed to search leads",
+      },
       { status: 500 }
     );
   }
 }
-
-

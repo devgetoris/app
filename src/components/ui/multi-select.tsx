@@ -91,7 +91,7 @@ export const MultiSelect = React.forwardRef<
 
     const toggleOption = (value: string) => {
       const newSelectedValues = selectedValues.includes(value)
-        ? selectedValues.filter((v) => v !== value)
+        ? selectedValues.filter(v => v !== value)
         : [...selectedValues, value];
       setSelectedValues(newSelectedValues);
       onValueChange(newSelectedValues);
@@ -103,7 +103,7 @@ export const MultiSelect = React.forwardRef<
     };
 
     const handleTogglePopover = () => {
-      setIsPopoverOpen((prev) => !prev);
+      setIsPopoverOpen(prev => !prev);
     };
 
     const clearExtraOptions = () => {
@@ -116,7 +116,7 @@ export const MultiSelect = React.forwardRef<
       if (selectedValues.length === options.length) {
         handleClear();
       } else {
-        const allValues = options.map((option) => option.value);
+        const allValues = options.map(option => option.value);
         setSelectedValues(allValues);
         onValueChange(allValues);
       }
@@ -141,16 +141,13 @@ export const MultiSelect = React.forwardRef<
             {selectedValues.length > 0 ? (
               <div className="flex justify-between items-center w-full">
                 <div className="flex flex-wrap items-center">
-                  {selectedValues.slice(0, maxCount).map((value) => {
-                    const option = options.find((o) => o.value === value);
+                  {selectedValues.slice(0, maxCount).map(value => {
+                    const option = options.find(o => o.value === value);
                     const IconComponent = option?.icon;
                     return (
                       <Badge
                         key={value}
-                        className={cn(
-                          multiSelectVariants({ variant }),
-                          "m-1"
-                        )}
+                        className={cn(multiSelectVariants({ variant }), "m-1")}
                       >
                         {IconComponent && (
                           <IconComponent className="h-4 w-4 mr-2" />
@@ -158,7 +155,7 @@ export const MultiSelect = React.forwardRef<
                         {option?.label}
                         <X
                           className="ml-2 h-4 w-4 cursor-pointer"
-                          onClick={(event) => {
+                          onClick={event => {
                             event.stopPropagation();
                             toggleOption(value);
                           }}
@@ -176,7 +173,7 @@ export const MultiSelect = React.forwardRef<
                       {`+ ${selectedValues.length - maxCount} more`}
                       <X
                         className="ml-2 h-4 w-4 cursor-pointer"
-                        onClick={(event) => {
+                        onClick={event => {
                           event.stopPropagation();
                           clearExtraOptions();
                         }}
@@ -187,7 +184,7 @@ export const MultiSelect = React.forwardRef<
                 <div className="flex items-center justify-between">
                   <X
                     className="h-4 mx-2 cursor-pointer text-muted-foreground"
-                    onClick={(event) => {
+                    onClick={event => {
                       event.stopPropagation();
                       handleClear();
                     }}
@@ -228,7 +225,7 @@ export const MultiSelect = React.forwardRef<
             </Button>
             <Separator className="mb-2" />
             <div className="max-h-64 overflow-auto">
-              {options.map((option) => {
+              {options.map(option => {
                 const isSelected = selectedValues.includes(option.value);
                 return (
                   <div
@@ -258,4 +255,3 @@ export const MultiSelect = React.forwardRef<
 );
 
 MultiSelect.displayName = "MultiSelect";
-

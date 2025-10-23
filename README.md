@@ -1,15 +1,18 @@
 # LeadFlow - AI-Powered Lead Generation System
 
-A comprehensive lead generation and email marketing platform that uses Apollo API for lead discovery, OpenAI for personalized email generation, and features a hybrid automation workflow.
+A comprehensive lead generation and email marketing platform that uses Apollo API for lead
+discovery, OpenAI for personalized email generation, and features a hybrid automation workflow.
 
 ## Features
 
 - **Smart Lead Discovery**: Search and import leads from Apollo API with rich profile data
 - **AI Email Generation**: Generate personalized emails using GPT-4 based on lead profiles
 - **Hybrid Automation**: Set rules for automatic sending or manual review
-- **Lead Management**: View comprehensive lead profiles with employment history, company details, and social profiles
+- **Lead Management**: View comprehensive lead profiles with employment history, company details,
+  and social profiles
 - **Email Review System**: Review, edit, and approve emails before sending
-- **Campaign Analytics**: Track email performance with open rates, click rates, and engagement metrics
+- **Campaign Analytics**: Track email performance with open rates, click rates, and engagement
+  metrics
 - **Secure Authentication**: Clerk authentication with protected routes
 
 ## Tech Stack
@@ -39,12 +42,14 @@ A comprehensive lead generation and email marketing platform that uses Apollo AP
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd email
 ```
 
 2. Install dependencies:
+
 ```bash
 bun install
 # or
@@ -52,11 +57,13 @@ npm install
 ```
 
 3. Set up environment variables:
+
 ```bash
 cp .env.example .env.local
 ```
 
 Edit `.env.local` and add your API keys:
+
 ```env
 # Clerk Authentication
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
@@ -77,6 +84,7 @@ RESEND_FROM_EMAIL=your_email@domain.com
 ```
 
 4. Set up the database:
+
 ```bash
 # Generate migration
 bun run db:generate
@@ -86,6 +94,7 @@ bun run db:migrate
 ```
 
 5. Start the development server:
+
 ```bash
 bun run dev
 # or
@@ -137,6 +146,7 @@ src/
 ### 1. Onboarding
 
 After signing up, complete the onboarding process to:
+
 - Provide business information
 - Set marketing goals
 - Define target audience criteria
@@ -146,6 +156,7 @@ After signing up, complete the onboarding process to:
 ### 2. Finding Leads
 
 From the dashboard:
+
 1. Enter search criteria (keywords, job titles, industries, etc.)
 2. Click "Search Leads"
 3. Leads will be imported from Apollo API and saved to your database
@@ -153,6 +164,7 @@ From the dashboard:
 ### 3. Generating Emails
 
 For each lead:
+
 1. Navigate to the lead's profile
 2. Go to the "Generate Email" tab
 3. Select tone and add custom instructions
@@ -162,6 +174,7 @@ For each lead:
 ### 4. Reviewing & Sending
 
 From the Emails page:
+
 1. View all pending emails
 2. Edit email content if needed
 3. Click "Send Now" to send immediately
@@ -170,6 +183,7 @@ From the Emails page:
 ### 5. Tracking Performance
 
 From the Campaigns page:
+
 - View email metrics (sent, opened, clicked)
 - Track open rates and click rates
 - Analyze campaign performance
@@ -187,6 +201,7 @@ The system supports hybrid automation:
 ### Apollo API
 
 Used for:
+
 - Searching for leads by various criteria
 - Enriching lead profiles with detailed information
 - Accessing employment history, education, and company data
@@ -194,6 +209,7 @@ Used for:
 ### OpenAI
 
 Used for:
+
 - Generating personalized email content
 - Creating subject lines
 - Multiple tone options (professional, casual, friendly, formal)
@@ -201,6 +217,7 @@ Used for:
 ### Resend
 
 Used for:
+
 - Sending emails
 - Tracking delivery, opens, and clicks
 - Handling webhooks for engagement events
@@ -212,6 +229,7 @@ Used for:
 Configure your Resend webhook URL to: `https://yourdomain.com/api/webhooks/resend`
 
 The webhook handles:
+
 - Email delivery confirmations
 - Open tracking
 - Click tracking
@@ -231,6 +249,7 @@ The webhook handles:
 ### Testing
 
 Before deploying:
+
 1. Test with small batches of leads
 2. Verify email generation quality
 3. Test automation rules
@@ -248,6 +267,7 @@ Before deploying:
 ### Database
 
 Use a managed PostgreSQL service:
+
 - Neon (recommended for Vercel)
 - Supabase
 - Railway
@@ -267,16 +287,19 @@ Ensure all environment variables are set in your deployment platform.
 ## Troubleshooting
 
 ### Database Connection Issues
+
 - Verify DATABASE_URL is correct
 - Check if database server is running
 - Ensure database exists
 
 ### API Errors
+
 - Verify all API keys are set correctly
 - Check API rate limits
 - Review API documentation for changes
 
 ### Email Not Sending
+
 - Verify Resend API key
 - Check FROM email is verified in Resend
 - Review email status in dashboard
@@ -295,6 +318,7 @@ MIT
 ## Support
 
 For issues and questions:
+
 - Create an issue on GitHub
 - Contact support at support@leadflow.com
 
