@@ -10,7 +10,10 @@ export async function POST(request: NextRequest) {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     // Get user from database
@@ -19,7 +22,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
     }
 
     const body = await request.json();
@@ -58,7 +64,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     const apolloClient = getApolloClient();
-
+    
     // Build search params - only include non-empty values
     const searchParams: any = {
       page,
@@ -174,10 +180,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Log the search parameters for debugging
-    console.log("Apollo Search Params:", JSON.stringify(searchParams, null, 2));
-
+    console.log("🔍 Apollo People Search Params:", JSON.stringify(searchParams, null, 2));
+    
     // Validate that we have at least one search criterion
-    const hasSearchCriteria =
+    const hasSearchCriteria = 
       searchParams.q_keywords ||
       searchParams.person_titles ||
       searchParams.person_seniorities ||
@@ -202,14 +208,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Search for leads
-    const response = await apolloClient.searchContacts(searchParams);
-
-    // Save leads to database
-    const savedLeads = [];
+    // Add fallback search strategy for broader results
+    console.log("🔍 Apollo People Search - Using comprehensive search strategy");
     
+    // If we have very specific criteria, also try a broader search
+    const isVerySpecific = 
+      searchParams.organization_ids?.length > 0 ||
+      searchParams.q_organization_domains_list?.length > 0 ||
+      (searchParams.person_titles?.length === 1 && searchParams.person_locations?.length === 1);
+
+    if (isVerySpecific) {
+      console.log("📈 Apollo People Search - Very specific criteria detected, adding broader search parameters");
+      // Add keywords to broaden the search
+      if (searchParams.person_titles?.length > 0) {
+        const titleKeywords = searchParams.person_titles.join(" ");
+        searchParams.q_keywords = searchParams.q_keywords 
+          ? `${searchParams.q_keywords} ${titleKeywords}` 
+          : titleKeywords;
+      }
+    }
+    
+    // Search for leads
+    let response = await apolloClient.searchContacts(searchParams);
+    let allContacts = response.people || response.contacts || [];
+
+    // If no results found, try a broader search
+    if (allContacts.length === 0) {
+      console.log("🔄 Apollo People Search - No results found, trying broader search...");
+      
+      // Create a broader search by focusing on keywords and removing restrictive filters
+      const broaderParams: any = {
+        q_keywords: searchParams.q_keywords,
+        person_titles: searchParams.person_titles,
+        include_similar_titles: true,
+        page: searchParams.page,
+        per_page: searchParams.per_page,
+      };
+
+      // Add location if specified but make it less restrictive
+      if (searchParams.person_locations?.length > 0) {
+        broaderParams.person_locations = searchParams.person_locations;
+      }
+      if (searchParams.organization_locations?.length > 0) {
+        broaderParams.organization_locations = searchParams.organization_locations;
+      }
+
+      console.log("🔍 Apollo People Search - Broader search params:", JSON.stringify(broaderParams, null, 2));
+      
+      try {
+        response = await apolloClient.searchContacts(broaderParams);
+        allContacts = response.people || response.contacts || [];
+        console.log(`📈 Apollo People Search - Broader search found ${allContacts.length} contacts`);
+      } catch (error) {
+        console.log("⚠️ Apollo People Search - Broader search also failed:", error);
+      }
+    }
+
     // Prepare contacts for bulk enrichment (batch in groups of 10)
-    const allContacts = response.people || response.contacts || [];
     const contactBatches: Array<typeof allContacts> = [];
     
     for (let i = 0; i < allContacts.length; i += 10) {
@@ -219,6 +274,8 @@ export async function POST(request: NextRequest) {
     console.log(`📦 Bulk Enrichment - Processing ${allContacts.length} contacts in ${contactBatches.length} batch(es)`);
 
     // Process each batch with bulk enrichment
+    const enrichedLeads = [];
+    
     for (let batchIdx = 0; batchIdx < contactBatches.length; batchIdx++) {
       const batch = contactBatches[batchIdx];
       console.log(`\n📥 Batch ${batchIdx + 1}/${contactBatches.length} - Enriching ${batch.length} contacts...`);
@@ -230,7 +287,15 @@ export async function POST(request: NextRequest) {
         try {
           console.log(`🔧 Enriching by Apollo ID: ${contact.id}`);
           const response = await apolloClient.getContactById(contact.id);
-          enrichedBatch.push(response.person);
+          
+          // Check if we got a valid response with actual email
+          if (response.person && response.person.email && !response.person.email.includes("email_not_unlocked")) {
+            console.log(`✅ Successfully enriched ${contact.first_name} ${contact.last_name} with email: ${response.person.email}`);
+            enrichedBatch.push(response.person);
+          } else {
+            console.log(`⚠️ Enrichment returned no email for ${contact.first_name} ${contact.last_name}, using search data`);
+            enrichedBatch.push(contact);
+          }
         } catch (error) {
           console.log(`⚠️ Failed to enrich ${contact.first_name} ${contact.last_name} (${contact.id}), using search data: ${error instanceof Error ? error.message : 'Unknown error'}`);
           // Fallback to search data
@@ -250,93 +315,82 @@ export async function POST(request: NextRequest) {
         console.log(`   ✅ Enrichment successful. Email: ${enrichedContact.email || 'NO EMAIL'}`);
         console.log(`   ℹ️ Email status: ${enrichedContact.email || 'NO EMAIL'}`);
 
-        // Check if lead already exists for this user
-        const existingLead = await db.query.leads.findFirst({
-          where: eq(leads.apolloId, originalContact.id),
-        });
+        // Determine email status for better user experience
+        const emailStatus = enrichedContact.email && !enrichedContact.email.includes("email_not_unlocked") 
+          ? enrichedContact.email 
+          : "email_not_unlocked";
 
-        if (!existingLead) {
-          console.log(`   💾 Saving new lead with email: ${enrichedContact.email}`);
-          const [newLead] = await db.insert(leads).values({
-            userId: user.id,
-            apolloId: originalContact.id,
-            firstName: enrichedContact.first_name,
-            lastName: enrichedContact.last_name,
-            email: enrichedContact.email,
-            phone: enrichedContact.phone_numbers?.[0]?.sanitized_number,
-            title: enrichedContact.title,
-            seniority: enrichedContact.seniority,
-            departments: enrichedContact.departments,
-            
-            // Company info - handle missing data gracefully
-            companyName: enrichedContact.organization?.name,
-            companyDomain: enrichedContact.organization?.primary_domain,
-            companyIndustry: enrichedContact.organization?.industry,
-            companySize: enrichedContact.organization?.estimated_num_employees 
-              ? String(enrichedContact.organization.estimated_num_employees) 
-              : null,
-            companyRevenue: enrichedContact.organization?.annual_revenue_printed,
-            companyLocation: enrichedContact.organization?.raw_address,
-            companyCity: enrichedContact.organization?.city,
-            companyState: enrichedContact.organization?.state,
-            companyCountry: enrichedContact.organization?.country,
-            companyFunding: enrichedContact.organization?.publicly_traded_symbol,
-            companyTechnologies: enrichedContact.organization?.technology_names,
-            
-            // Social profiles
-            linkedinUrl: enrichedContact.linkedin_url,
-            twitterUrl: enrichedContact.twitter_url,
-            facebookUrl: enrichedContact.facebook_url,
-            githubUrl: enrichedContact.github_url,
-            
-            // Additional data
-            profilePhoto: enrichedContact.photo_url,
-            bio: enrichedContact.headline,
-            employmentHistory: enrichedContact.employment_history?.map((job: any) => ({
-              title: job.title || "",
-              company: job.organization_name || "",
-              startDate: job.start_date,
-              endDate: job.end_date,
-              current: job.current,
-            })),
-            education: enrichedContact.education?.map((edu: any) => ({
-              school: edu.organization_name || "",
-              degree: edu.degree,
-              field: edu.major,
-              startDate: edu.start_date,
-              endDate: edu.end_date,
-            })),
-            
-            // Store full Apollo data for reference
-            apolloData: enrichedContact,
-            
-            // Initial status
-            status: "new",
-          }).returning();
+        // Create lead object for modal display (don't save to database yet)
+        const leadData = {
+          id: originalContact.id,
+          apolloId: originalContact.id,
+          firstName: enrichedContact.first_name,
+          lastName: enrichedContact.last_name,
+          email: emailStatus,
+          phone: enrichedContact.phone_numbers?.[0]?.sanitized_number,
+          title: enrichedContact.title,
+          seniority: enrichedContact.seniority,
+          departments: enrichedContact.departments,
+          
+          // Company info - handle missing data gracefully
+          companyName: enrichedContact.organization?.name,
+          companyDomain: enrichedContact.organization?.primary_domain,
+          companyIndustry: enrichedContact.organization?.industry,
+          companySize: enrichedContact.organization?.estimated_num_employees 
+            ? String(enrichedContact.organization.estimated_num_employees) 
+            : null,
+          companyRevenue: enrichedContact.organization?.annual_revenue_printed,
+          companyLocation: enrichedContact.organization?.raw_address,
+          companyCity: enrichedContact.organization?.city,
+          companyState: enrichedContact.organization?.state,
+          companyCountry: enrichedContact.organization?.country,
+          companyFunding: enrichedContact.organization?.publicly_traded_symbol,
+          companyTechnologies: enrichedContact.organization?.technology_names,
+          
+          // Social profiles
+          linkedinUrl: enrichedContact.linkedin_url,
+          twitterUrl: enrichedContact.twitter_url,
+          facebookUrl: enrichedContact.facebook_url,
+          githubUrl: enrichedContact.github_url,
+          
+          // Additional data
+          profilePhoto: enrichedContact.photo_url,
+          bio: enrichedContact.headline,
+          employmentHistory: enrichedContact.employment_history?.map((job: any) => ({
+            title: job.title || "",
+            company: job.organization_name || "",
+            startDate: job.start_date,
+            endDate: job.end_date,
+            current: job.current,
+          })),
+          education: enrichedContact.education?.map((edu: any) => ({
+            school: edu.organization_name || "",
+            degree: edu.degree,
+            field: edu.major,
+            startDate: edu.start_date,
+            endDate: edu.end_date,
+          })),
+          
+          // Store full Apollo data for reference
+          apolloData: enrichedContact,
+        };
 
-          savedLeads.push(newLead);
-        } else {
-          console.log(`   ℹ️ Lead already exists in database`);
-          // Add existing leads regardless of email status
-          savedLeads.push(existingLead);
-        }
+        enrichedLeads.push(leadData);
       }
     }
 
-    console.log(`\n✨ Search complete. Saved ${savedLeads.length} leads.`);
+    console.log(`\n✨ People search complete. Found ${enrichedLeads.length} leads.`);
 
     return NextResponse.json({
       success: true,
-      leads: savedLeads,
+      leads: enrichedLeads,
       pagination: response.pagination,
+      searchType: "people",
     });
   } catch (error) {
-    console.error("Apollo search error:", error);
+    console.error("Apollo people search error:", error);
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : "Failed to search leads",
-      },
+      { error: error instanceof Error ? error.message : "Failed to search people" },
       { status: 500 }
     );
   }
