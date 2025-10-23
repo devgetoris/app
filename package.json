@@ -55,6 +55,7 @@
     "@types/prettier": "^3.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.21",
     "drizzle-kit": "^0.31.5",
     "prettier": "^3.6.2",
     "tailwindcss": "^4",

@@ -132,10 +132,3 @@ export function LeadCard({ lead }: { lead: Lead }) {
     </Card>
   );
 }
-<<<<<<< HEAD
-=======
-
-
-
-
->>>>>>> 262fcb9 (somewhat working)

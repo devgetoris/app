@@ -211,10 +211,3 @@ export function EmailReviewCard({
     </Card>
   );
 }
-<<<<<<< HEAD
-=======
-
-
-
-
->>>>>>> 262fcb9 (somewhat working)

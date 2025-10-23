@@ -79,10 +79,3 @@ export default async function LeadsPage() {
     </div>
   );
 }
-<<<<<<< HEAD
-=======
-
-
-
-
->>>>>>> 262fcb9 (somewhat working)
