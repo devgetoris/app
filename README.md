@@ -1,4 +1,4 @@
-# LeadFlow - AI-Powered Lead Generation System
+# OrisAI - AI-Powered Lead Generation System
 
 A comprehensive lead generation and email marketing platform that uses Apollo API for lead discovery, OpenAI for personalized email generation, and features a hybrid automation workflow.
 
