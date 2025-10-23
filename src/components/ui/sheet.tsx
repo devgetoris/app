@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use client";
 
 import * as React from "react";
@@ -8,24 +9,48 @@ import { cn } from "@/lib/utils";
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
+=======
+"use client"
+
+import * as React from "react"
+import * as SheetPrimitive from "@radix-ui/react-dialog"
+import { XIcon } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
+  return <SheetPrimitive.Root data-slot="sheet" {...props} />
+>>>>>>> 262fcb9 (somewhat working)
 }
 
 function SheetTrigger({
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
+<<<<<<< HEAD
   return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />;
+=======
+  return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />
+>>>>>>> 262fcb9 (somewhat working)
 }
 
 function SheetClose({
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Close>) {
+<<<<<<< HEAD
   return <SheetPrimitive.Close data-slot="sheet-close" {...props} />;
+=======
+  return <SheetPrimitive.Close data-slot="sheet-close" {...props} />
+>>>>>>> 262fcb9 (somewhat working)
 }
 
 function SheetPortal({
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Portal>) {
+<<<<<<< HEAD
   return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
+=======
+  return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />
+>>>>>>> 262fcb9 (somewhat working)
 }
 
 function SheetOverlay({
@@ -41,7 +66,11 @@ function SheetOverlay({
       )}
       {...props}
     />
+<<<<<<< HEAD
   );
+=======
+  )
+>>>>>>> 262fcb9 (somewhat working)
 }
 
 function SheetContent({
@@ -50,7 +79,11 @@ function SheetContent({
   side = "right",
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
+<<<<<<< HEAD
   side?: "top" | "right" | "bottom" | "left";
+=======
+  side?: "top" | "right" | "bottom" | "left"
+>>>>>>> 262fcb9 (somewhat working)
 }) {
   return (
     <SheetPortal>
@@ -78,7 +111,11 @@ function SheetContent({
         </SheetPrimitive.Close>
       </SheetPrimitive.Content>
     </SheetPortal>
+<<<<<<< HEAD
   );
+=======
+  )
+>>>>>>> 262fcb9 (somewhat working)
 }
 
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
@@ -88,7 +125,11 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
       className={cn("flex flex-col gap-1.5 p-4", className)}
       {...props}
     />
+<<<<<<< HEAD
   );
+=======
+  )
+>>>>>>> 262fcb9 (somewhat working)
 }
 
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
@@ -98,7 +139,11 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
       className={cn("mt-auto flex flex-col gap-2 p-4", className)}
       {...props}
     />
+<<<<<<< HEAD
   );
+=======
+  )
+>>>>>>> 262fcb9 (somewhat working)
 }
 
 function SheetTitle({
@@ -111,7 +156,11 @@ function SheetTitle({
       className={cn("text-foreground font-semibold", className)}
       {...props}
     />
+<<<<<<< HEAD
   );
+=======
+  )
+>>>>>>> 262fcb9 (somewhat working)
 }
 
 function SheetDescription({
@@ -124,7 +173,11 @@ function SheetDescription({
       className={cn("text-muted-foreground text-sm", className)}
       {...props}
     />
+<<<<<<< HEAD
   );
+=======
+  )
+>>>>>>> 262fcb9 (somewhat working)
 }
 
 export {
@@ -136,4 +189,8 @@ export {
   SheetFooter,
   SheetTitle,
   SheetDescription,
+<<<<<<< HEAD
 };
+=======
+}
+>>>>>>> 262fcb9 (somewhat working)

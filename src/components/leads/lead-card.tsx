@@ -77,7 +77,7 @@ export function LeadCard({ lead }: { lead: Lead }) {
         </div>
 
         {/* Contact Info */}
-        {lead.email && (
+        {lead.email && !lead.email.includes("email_not_unlocked") && (
           <div className="text-sm text-muted-foreground truncate">
             {lead.email}
           </div>
@@ -132,3 +132,10 @@ export function LeadCard({ lead }: { lead: Lead }) {
     </Card>
   );
 }
+<<<<<<< HEAD
+=======
+
+
+
+
+>>>>>>> 262fcb9 (somewhat working)

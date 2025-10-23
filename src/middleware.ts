@@ -10,8 +10,6 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks(.*)",
 ]);
 
-const isOnboardingRoute = createRouteMatcher(["/onboarding(.*)"]);
-
 export default clerkMiddleware(async (auth, request) => {
   const { userId } = await auth();
 
@@ -26,14 +24,6 @@ export default clerkMiddleware(async (auth, request) => {
     signInUrl.searchParams.set("redirect_url", request.url);
     return NextResponse.redirect(signInUrl);
   }
-
-  // Allow onboarding route for authenticated users
-  if (isOnboardingRoute(request)) {
-    return NextResponse.next();
-  }
-
-  // For dashboard routes, we'll check onboarding completion in the dashboard layout
-  // This allows us to access the database to check user status
 
   return NextResponse.next();
 });
