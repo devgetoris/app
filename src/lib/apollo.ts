@@ -1,13 +1,44 @@
 import axios, { AxiosInstance } from "axios";
 
 export interface ApolloSearchParams {
+  // Basic search
   q_keywords?: string;
+  
+  // People search parameters
   person_titles?: string[];
   person_seniorities?: string[];
+  person_locations?: string[];
+  include_similar_titles?: boolean;
+  contact_email_status?: string[];
+  
+  // Organization search parameters
   organization_locations?: string[];
   organization_num_employees_ranges?: string[];
-  organization_industry_tag_ids?: string[];
-  q_organization_keyword_tags?: string[];
+  organization_ids?: string[];
+  q_organization_domains_list?: string[];
+  revenue_range?: {
+    min?: number;
+    max?: number;
+  };
+  
+  // Technology filters
+  currently_using_all_of_technology_uids?: string[];
+  currently_using_any_of_technology_uids?: string[];
+  currently_not_using_any_of_technology_uids?: string[];
+  
+  // Job posting filters
+  q_organization_job_titles?: string[];
+  organization_job_locations?: string[];
+  organization_num_jobs_range?: {
+    min?: number;
+    max?: number;
+  };
+  organization_job_posted_at_range?: {
+    min?: string;
+    max?: string;
+  };
+  
+  // Pagination
   page?: number;
   per_page?: number;
 }
@@ -31,10 +62,37 @@ export interface ApolloOrganization {
 }
 
 export interface OrganizationSearchParams {
+  // Basic search
   q_keywords?: string;
+  
+  // Organization search parameters
   organization_locations?: string[];
   organization_num_employees_ranges?: string[];
-  industry_tag_ids?: string[];
+  organization_ids?: string[];
+  q_organization_domains_list?: string[];
+  revenue_range?: {
+    min?: number;
+    max?: number;
+  };
+  
+  // Technology filters
+  currently_using_all_of_technology_uids?: string[];
+  currently_using_any_of_technology_uids?: string[];
+  currently_not_using_any_of_technology_uids?: string[];
+  
+  // Job posting filters
+  q_organization_job_titles?: string[];
+  organization_job_locations?: string[];
+  organization_num_jobs_range?: {
+    min?: number;
+    max?: number;
+  };
+  organization_job_posted_at_range?: {
+    min?: string;
+    max?: string;
+  };
+  
+  // Pagination
   page?: number;
   per_page?: number;
 }
@@ -234,13 +292,78 @@ class ApolloClient {
     try {
       console.log("🔍 Apollo Search - Input params:", JSON.stringify(params, null, 2));
       
-      // Important: Do NOT add reveal_personal_emails to search endpoint
-      // The search endpoint does not return new email addresses or phone numbers.
-      // Emails are only enriched via People Enrichment or Bulk People Enrichment endpoints.
-      const searchPayload = {
-        ...params,
-        // reveal_personal_emails is NOT supported on search endpoint
+      // Build the search payload with all supported parameters
+      const searchPayload: any = {
+        // Basic search
+        q_keywords: params.q_keywords,
+        
+        // People search parameters
+        person_titles: params.person_titles,
+        person_seniorities: params.person_seniorities,
+        person_locations: params.person_locations,
+        include_similar_titles: params.include_similar_titles,
+        contact_email_status: params.contact_email_status,
+        
+        // Organization search parameters
+        organization_locations: params.organization_locations,
+        organization_num_employees_ranges: params.organization_num_employees_ranges,
+        organization_ids: params.organization_ids,
+        q_organization_domains_list: params.q_organization_domains_list,
+        
+        // Technology filters
+        currently_using_all_of_technology_uids: params.currently_using_all_of_technology_uids,
+        currently_using_any_of_technology_uids: params.currently_using_any_of_technology_uids,
+        currently_not_using_any_of_technology_uids: params.currently_not_using_any_of_technology_uids,
+        
+        // Job posting filters
+        q_organization_job_titles: params.q_organization_job_titles,
+        organization_job_locations: params.organization_job_locations,
+        
+        // Pagination
+        page: params.page,
+        per_page: params.per_page,
       };
+
+      // Add revenue range if provided
+      if (params.revenue_range) {
+        if (params.revenue_range.min !== undefined) {
+          searchPayload['revenue_range[min]'] = params.revenue_range.min;
+        }
+        if (params.revenue_range.max !== undefined) {
+          searchPayload['revenue_range[max]'] = params.revenue_range.max;
+        }
+      }
+
+      // Add organization job range if provided
+      if (params.organization_num_jobs_range) {
+        if (params.organization_num_jobs_range.min !== undefined) {
+          searchPayload['organization_num_jobs_range[min]'] = params.organization_num_jobs_range.min;
+        }
+        if (params.organization_num_jobs_range.max !== undefined) {
+          searchPayload['organization_num_jobs_range[max]'] = params.organization_num_jobs_range.max;
+        }
+      }
+
+      // Add organization job posted at range if provided
+      if (params.organization_job_posted_at_range) {
+        if (params.organization_job_posted_at_range.min) {
+          searchPayload['organization_job_posted_at_range[min]'] = params.organization_job_posted_at_range.min;
+        }
+        if (params.organization_job_posted_at_range.max) {
+          searchPayload['organization_job_posted_at_range[max]'] = params.organization_job_posted_at_range.max;
+        }
+      }
+
+      // Add email reveal parameter for paid plans
+      searchPayload.reveal_personal_emails = true;
+
+      // Remove undefined values
+      Object.keys(searchPayload).forEach(key => {
+        if (searchPayload[key] === undefined || 
+            (Array.isArray(searchPayload[key]) && searchPayload[key].length === 0)) {
+          delete searchPayload[key];
+        }
+      });
 
       console.log("📤 Apollo Search - Full request payload:", JSON.stringify(searchPayload, null, 2));
       
@@ -306,12 +429,12 @@ class ApolloClient {
     try {
       console.log("🔧 Apollo Enrich by Email - Email:", email);
       
-      const response = await this.client.get<ApolloEnrichResponse>('/people/match', {
-        params: {
-          email,
-          reveal_personal_emails: true, // Enable email revelation
-        },
-      });
+      const requestBody = {
+        email,
+        reveal_personal_emails: true,
+      };
+      
+      const response = await this.client.post<ApolloEnrichResponse>('/people/match', requestBody);
 
       console.log("✅ Apollo Enrich - Response:", {
         name: response.data.person?.name,
@@ -338,22 +461,25 @@ class ApolloClient {
   }
 
   /**
-   * Enrich a contact by ID
+   * Enrich a contact by ID using the People Enrichment endpoint
    */
   async getContactById(id: string): Promise<ApolloEnrichResponse> {
     try {
       console.log("🔧 Apollo Enrich by ID - Contact ID:", id);
       
-      const response = await this.client.get<ApolloEnrichResponse>(`/people/${id}`, {
+      // Use the People Enrichment endpoint with the contact ID
+      const response = await this.client.get('/people/match', {
         params: {
-          reveal_personal_emails: true, // Enable email revelation
-        },
+          id: id,
+          reveal_personal_emails: true,
+        }
       });
 
-      console.log("✅ Apollo Enrich by ID - Response:", {
+      console.log("✅ Apollo Enrich by ID - Full Response:", {
         name: response.data.person?.name,
         email: response.data.person?.email,
         has_email: !!response.data.person?.email && !response.data.person.email.includes("email_not_unlocked"),
+        response_status: response.status,
       });
 
       return response.data;
@@ -363,6 +489,8 @@ class ApolloClient {
           status: error.response?.status,
           data: error.response?.data,
           contact_id: id,
+          request_url: error.config?.url,
+          request_method: error.config?.method,
         });
         const errorMessage =
           error.response?.data?.message ||
@@ -446,9 +574,71 @@ class ApolloClient {
     try {
       console.log("🏢 Apollo Organization Search - Input params:", JSON.stringify(params, null, 2));
 
-      const searchPayload = {
-        ...params,
+      // Build the search payload with all supported parameters
+      const searchPayload: any = {
+        // Basic search
+        q_keywords: params.q_keywords,
+        
+        // Organization search parameters
+        organization_locations: params.organization_locations,
+        organization_num_employees_ranges: params.organization_num_employees_ranges,
+        organization_ids: params.organization_ids,
+        q_organization_domains_list: params.q_organization_domains_list,
+        
+        // Technology filters
+        currently_using_all_of_technology_uids: params.currently_using_all_of_technology_uids,
+        currently_using_any_of_technology_uids: params.currently_using_any_of_technology_uids,
+        currently_not_using_any_of_technology_uids: params.currently_not_using_any_of_technology_uids,
+        
+        // Job posting filters
+        q_organization_job_titles: params.q_organization_job_titles,
+        organization_job_locations: params.organization_job_locations,
+        
+        // Pagination
+        page: params.page,
+        per_page: params.per_page,
       };
+
+      // Add revenue range if provided
+      if (params.revenue_range) {
+        if (params.revenue_range.min !== undefined) {
+          searchPayload['revenue_range[min]'] = params.revenue_range.min;
+        }
+        if (params.revenue_range.max !== undefined) {
+          searchPayload['revenue_range[max]'] = params.revenue_range.max;
+        }
+      }
+
+      // Add organization job range if provided
+      if (params.organization_num_jobs_range) {
+        if (params.organization_num_jobs_range.min !== undefined) {
+          searchPayload['organization_num_jobs_range[min]'] = params.organization_num_jobs_range.min;
+        }
+        if (params.organization_num_jobs_range.max !== undefined) {
+          searchPayload['organization_num_jobs_range[max]'] = params.organization_num_jobs_range.max;
+        }
+      }
+
+      // Add organization job posted at range if provided
+      if (params.organization_job_posted_at_range) {
+        if (params.organization_job_posted_at_range.min) {
+          searchPayload['organization_job_posted_at_range[min]'] = params.organization_job_posted_at_range.min;
+        }
+        if (params.organization_job_posted_at_range.max) {
+          searchPayload['organization_job_posted_at_range[max]'] = params.organization_job_posted_at_range.max;
+        }
+      }
+
+      // Add email reveal parameter for paid plans
+      searchPayload.reveal_personal_emails = true;
+
+      // Remove undefined values
+      Object.keys(searchPayload).forEach(key => {
+        if (searchPayload[key] === undefined || 
+            (Array.isArray(searchPayload[key]) && searchPayload[key].length === 0)) {
+          delete searchPayload[key];
+        }
+      });
 
       console.log("📤 Apollo Organization Search - Full request payload:", JSON.stringify(searchPayload, null, 2));
 

@@ -7,11 +7,46 @@ const openai = new OpenAI({
 });
 
 interface ParsedQuery {
+  // Basic search
   keywords?: string;
-  jobTitles: string[];
-  industries: string[];
-  companySizes: string[];
-  locations: string[];
+  
+  // People search parameters
+  person_titles?: string[];
+  person_seniorities?: string[];
+  person_locations?: string[];
+  include_similar_titles?: boolean;
+  contact_email_status?: string[];
+  
+  // Organization search parameters
+  organization_locations?: string[];
+  organization_num_employees_ranges?: string[];
+  organization_ids?: string[];
+  q_organization_domains_list?: string[];
+  revenue_range?: {
+    min?: number;
+    max?: number;
+  };
+  
+  // Technology filters
+  currently_using_all_of_technology_uids?: string[];
+  currently_using_any_of_technology_uids?: string[];
+  currently_not_using_any_of_technology_uids?: string[];
+  
+  // Job posting filters
+  q_organization_job_titles?: string[];
+  organization_job_locations?: string[];
+  organization_num_jobs_range?: {
+    min?: number;
+    max?: number;
+  };
+  organization_job_posted_at_range?: {
+    min?: string;
+    max?: string;
+  };
+  
+  // Pagination
+  page?: number;
+  per_page?: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -38,30 +73,56 @@ export async function POST(request: NextRequest) {
     console.log("🤖 AI Query Parser - Input query:", query);
 
     // Use OpenAI to parse the natural language query
-    const systemPrompt = `You are an expert at parsing natural language lead search queries into structured search parameters for an Apollo API lead database.
+    const systemPrompt = `You are an expert at parsing natural language lead search queries into structured search parameters for Apollo API.
 
-Your task is to extract and interpret:
-- Job Titles (e.g., "VP", "CEO", "Director", "Manager", "Engineer")
-- Industries (e.g., "Technology", "Finance", "Healthcare", "E-commerce")
-- Company Sizes (e.g., "1-10", "11-50", "51-200", "201-500", "501-1000", "1001-5000", "5001-10000", "10001+")
-- Locations (e.g., "San Francisco", "New York", "Austin", "United States", "UK")
-- Keywords (additional context or skills, e.g., "AI", "machine learning", "cloud")
+Your task is to extract and interpret ALL possible Apollo API parameters from natural language queries. Be AGGRESSIVE in finding matches - cast a wide net to ensure we find relevant results.
 
-Return ONLY a valid JSON object with no markdown or extra text:
-{
-  "keywords": "optional keywords, null if none",
-  "jobTitles": ["array of job titles"],
-  "industries": ["array of industries"],
-  "companySizes": ["array of company sizes"],
-  "locations": ["array of locations"]
-}
+PEOPLE SEARCH PARAMETERS:
+- person_titles: Job titles (e.g., "VP", "CEO", "Director", "Manager", "Engineer", "CTO", "CFO")
+- person_seniorities: Seniority levels (owner, founder, c_suite, partner, vp, head, director, manager, senior, entry, intern)
+- person_locations: Where people live (cities, states, countries)
+- include_similar_titles: Whether to include similar job titles (ALWAYS set to true for broader search)
+- contact_email_status: Email statuses (verified, unverified, likely to engage, unavailable)
 
-If a field cannot be determined, use an empty array. If keywords are mentioned, include them.
+ORGANIZATION SEARCH PARAMETERS:
+- organization_locations: Company headquarters locations
+- organization_num_employees_ranges: Employee count ranges (format: "1,10", "100,500", "1000,5000")
+- q_organization_domains_list: Company domains (without www or @)
+- revenue_range: Company revenue range (min/max numbers)
+- organization_ids: Specific Apollo organization IDs
+
+TECHNOLOGY FILTERS:
+- currently_using_all_of_technology_uids: Technologies company must use ALL of
+- currently_using_any_of_technology_uids: Technologies company uses ANY of
+- currently_not_using_any_of_technology_uids: Technologies company does NOT use
+
+JOB POSTING FILTERS:
+- q_organization_job_titles: Job titles in active postings
+- organization_job_locations: Locations of active job postings
+- organization_num_jobs_range: Number of active job postings (min/max)
+- organization_job_posted_at_range: Date range for job postings (YYYY-MM-DD format)
+
+BASIC SEARCH:
+- keywords: General search terms (use liberally for broader search)
+- page: Page number (default: 1)
+- per_page: Results per page (default: 25)
+
+IMPORTANT RULES:
+1. ALWAYS set include_similar_titles to true for broader search
+2. When in doubt, add keywords to capture more results
+3. Expand location names (SF → San Francisco, NY → New York, etc.)
+4. Add related job titles when possible (CTO → CTO, Chief Technology Officer, etc.)
+5. Include both person_locations AND organization_locations when location is mentioned
+6. Be liberal with company size ranges to cast a wider net
+
+Return ONLY a valid JSON object with no markdown or extra text. Use null for missing values, empty arrays for missing arrays.
 
 Examples:
-- "VP in SF" → {"keywords": null, "jobTitles": ["VP"], "industries": [], "companySizes": [], "locations": ["San Francisco"]}
-- "CTOs in AI startups" → {"keywords": "AI", "jobTitles": ["CTO"], "industries": ["Technology"], "companySizes": ["1-10", "11-50"], "locations": []}
-- "Product managers in NY tech companies with 100+ employees" → {"keywords": null, "jobTitles": ["Product Manager"], "industries": ["Technology"], "companySizes": ["101-500", "501-1000", "1001-5000", "5001-10000", "10001+"], "locations": ["New York"]}`;
+- "VP in SF" → {"person_titles": ["VP", "Vice President"], "person_locations": ["San Francisco"], "organization_locations": ["San Francisco"], "include_similar_titles": true, "keywords": "VP San Francisco"}
+- "CTOs in AI startups" → {"person_titles": ["CTO", "Chief Technology Officer"], "keywords": "AI artificial intelligence startup", "organization_num_employees_ranges": ["1,10", "11,50", "51,200"], "include_similar_titles": true}
+- "Directors at Salesforce" → {"person_titles": ["Director"], "q_organization_domains_list": ["salesforce.com"], "keywords": "Salesforce director", "include_similar_titles": true}
+- "Engineers using React" → {"person_titles": ["Engineer", "Software Engineer", "Developer"], "currently_using_any_of_technology_uids": ["react", "javascript", "frontend"], "keywords": "React engineer developer", "include_similar_titles": true}
+- "Companies hiring in Austin" → {"organization_job_locations": ["Austin"], "keywords": "hiring Austin jobs", "include_similar_titles": true}`;
 
     const userMessage = `Parse this lead search query: "${query}"`;
 
@@ -89,107 +150,28 @@ Examples:
     // Parse the JSON response
     const parsedQuery = JSON.parse(response || "{}") as ParsedQuery;
 
-    // Normalize job titles - match common variations
-    const jobTitleNormalizations: Record<string, string> = {
-      "vp": "VP of Engineering",
-      "vice president": "VP of Engineering",
-      "director": "Director of Engineering",
-      "manager": "Engineering Manager",
-      "cto": "CTO",
-      "ceo": "CEO",
-      "cfo": "CFO",
-      "coo": "COO",
-      "head": "Head of Engineering",
-      "lead": "Lead Developer",
-      "principal": "Senior Software Engineer",
-      "architect": "Senior Software Engineer",
-      "engineer": "Software Engineer",
-      "developer": "Lead Developer",
-      "pm": "Product Manager",
-      "product": "Product Manager",
-      "sales": "VP of Sales",
-    };
-
-    // Normalize the extracted job titles
-    const normalizedJobTitles = parsedQuery.jobTitles
-      .map((title) => {
-        const key = title.toLowerCase().trim();
-        for (const [pattern, normalized] of Object.entries(
-          jobTitleNormalizations
-        )) {
-          if (key.includes(pattern)) {
-            return normalized;
-          }
-        }
-        return title;
-      })
-      .filter((title) => title.length > 0);
-
-    // Normalize industries
-    const industryNormalizations: Record<string, string> = {
-      "tech": "Computer Software",
-      "technology": "Computer Software",
-      "software": "Computer Software",
-      "it": "Information Technology",
-      "ai": "Computer Software",
-      "startup": "Internet",
-      "finance": "Financial Services",
-      "banking": "Banking",
-      "healthcare": "Healthcare",
-      "education": "Education",
-      "ecommerce": "E-commerce",
-      "retail": "Retail",
-    };
-
-    const normalizedIndustries = parsedQuery.industries
-      .map((industry) => {
-        const key = industry.toLowerCase().trim();
-        for (const [pattern, normalized] of Object.entries(
-          industryNormalizations
-        )) {
-          if (key.includes(pattern)) {
-            return normalized;
-          }
-        }
-        return industry;
-      })
-      .filter((industry) => industry.length > 0);
-
-    // Normalize locations - expand city names to major cities list
-    const locationAbbreviations: Record<string, string> = {
-      "sf": "San Francisco",
-      "la": "Los Angeles",
-      "ny": "New York",
-      "nyc": "New York",
-      "london": "London",
-      "berlin": "Berlin",
-      "amsterdam": "Amsterdam",
-      "paris": "Paris",
-      "toronto": "Toronto",
-      "sydney": "Sydney",
-      "singapore": "Singapore",
-      "hk": "Hong Kong",
-      "tokyo": "Tokyo",
-      "bengaluru": "Bangalore",
-      "india": "India",
-      "us": "United States",
-      "uk": "United Kingdom",
-      "usa": "United States",
-    };
-
-    const normalizedLocations = parsedQuery.locations
-      .map((location) => {
-        const key = location.toLowerCase().trim();
-        return locationAbbreviations[key] || location;
-      })
-      .filter((location) => location.length > 0);
-
+    // Set defaults
     const result = {
-      keywords: parsedQuery.keywords,
-      jobTitles: normalizedJobTitles,
-      industries: normalizedIndustries,
-      companySizes: parsedQuery.companySizes,
-      locations: normalizedLocations,
+      keywords: parsedQuery.keywords || null,
+      person_titles: parsedQuery.person_titles || [],
+      person_seniorities: parsedQuery.person_seniorities || [],
+      person_locations: parsedQuery.person_locations || [],
+      include_similar_titles: parsedQuery.include_similar_titles ?? true,
+      contact_email_status: parsedQuery.contact_email_status || [],
+      organization_locations: parsedQuery.organization_locations || [],
+      organization_num_employees_ranges: parsedQuery.organization_num_employees_ranges || [],
+      organization_ids: parsedQuery.organization_ids || [],
+      q_organization_domains_list: parsedQuery.q_organization_domains_list || [],
+      revenue_range: parsedQuery.revenue_range || null,
+      currently_using_all_of_technology_uids: parsedQuery.currently_using_all_of_technology_uids || [],
+      currently_using_any_of_technology_uids: parsedQuery.currently_using_any_of_technology_uids || [],
+      currently_not_using_any_of_technology_uids: parsedQuery.currently_not_using_any_of_technology_uids || [],
+      q_organization_job_titles: parsedQuery.q_organization_job_titles || [],
+      organization_job_locations: parsedQuery.organization_job_locations || [],
+      organization_num_jobs_range: parsedQuery.organization_num_jobs_range || null,
+      organization_job_posted_at_range: parsedQuery.organization_job_posted_at_range || null,
+      page: parsedQuery.page || 1,
+      per_page: parsedQuery.per_page || 25,
     };
 
     console.log("🎯 AI Query Parser - Final parsed result:", result);
