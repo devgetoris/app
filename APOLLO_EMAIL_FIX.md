@@ -96,7 +96,38 @@ When performing a lead search, you'll now see logs like:
 
 ### Issue: Still seeing `email_not_unlocked`
 
-**Causes:**
+**Root Cause (FOUND & FIXED):**
+The issue was that when sending contacts to Apollo's bulk enrichment endpoint, we were passing the `email_not_unlocked@domain.com` placeholder as the email field. Apollo couldn't match this fake email to reveal the real email address.
+
+**The Fix:**
+Modified the bulk enrichment request to NOT send the `email` field when it contains the `email_not_unlocked` placeholder. Instead, we now rely on:
+- `first_name` + `last_name` combination
+- `linkedin_url` (primary identifier for matching)
+- `organization_name`
+
+This allows Apollo to properly match the contact and reveal their actual personal email, bypassing the `email_not_unlocked` placeholder.
+
+**Changes Made:**
+In `/src/app/api/apollo/search/route.ts` (lines 135-142):
+```typescript
+const bulkDetails = batch.map(contact => ({
+  first_name: contact.first_name,
+  last_name: contact.last_name,
+  // DON'T send email if it's the placeholder - use LinkedIn URL instead
+  email: contact.email && !contact.email.includes("email_not_unlocked") ? contact.email : undefined,
+  linkedin_url: contact.linkedin_url,
+  organization_name: contact.organization?.name,
+}));
+```
+
+**How It Works:**
+1. Initial search returns contacts with `email_not_unlocked`
+2. During bulk enrichment, we skip sending the fake email
+3. Apollo matches on LinkedIn URL + name + company instead
+4. Apollo's enrichment endpoint reveals the actual personal email
+5. Real emails are saved to database
+
+**Causes (If Still Seeing `email_not_unlocked`):**
 - Apollo API key doesn't have permission to reveal emails
 - User's account on Apollo is on the free tier (which doesn't reveal emails)
 - Contact is in a GDPR-compliant region

@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { Switch } from "@/components/ui/switch";
+import { SearchResultsModal } from "@/components/leads/search-results-modal";
 
 // Predefined options for multi-select
 const JOB_TITLES = [
@@ -52,6 +54,7 @@ const LOCATIONS = [
 export default function DashboardPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [searchType, setSearchType] = useState<"people" | "organizations">("people");
   const [keywords, setKeywords] = useState("");
   const [selectedJobTitles, setSelectedJobTitles] = useState<string[]>([]);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
@@ -60,6 +63,8 @@ export default function DashboardPage() {
   const [aiQuery, setAiQuery] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [parsedQuery, setParsedQuery] = useState<any>(null);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showResultsModal, setShowResultsModal] = useState(false);
 
   const clearAllFilters = () => {
     setKeywords("");
@@ -87,7 +92,13 @@ export default function DashboardPage() {
     try {
       setLoading(true);
 
+      // Choose the appropriate endpoint based on search type
+      const endpoint = searchType === "people" 
+        ? "/api/apollo/search-people" 
+        : "/api/apollo/search-organizations";
+
       console.log("Sending search request:", {
+        searchType,
         keywords,
         jobTitles: selectedJobTitles,
         industries: selectedIndustries,
@@ -95,39 +106,55 @@ export default function DashboardPage() {
         locations: selectedLocations,
       });
 
-      const response = await fetch("/api/apollo/search", {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           keywords,
-          jobTitles: selectedJobTitles,
-          industries: selectedIndustries,
-          companySizes: selectedCompanySizes,
-          locations: selectedLocations,
+          person_titles: selectedJobTitles,
+          person_locations: selectedLocations,
+          organization_locations: selectedLocations,
+          organization_num_employees_ranges: selectedCompanySizes,
+          // Map industries to keywords for broader search
+          ...(selectedIndustries.length > 0 && { 
+            keywords: keywords ? `${keywords} ${selectedIndustries.join(" ")}` : selectedIndustries.join(" ")
+          }),
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to search leads");
+        throw new Error(errorData.error || "Failed to search");
       }
 
       const data = await response.json();
       
-      if (data.leads.length === 0) {
-        toast.warning("No leads found. Try using fewer filters or different criteria.", {
-          duration: 5000,
-        });
+      if (searchType === "people") {
+        if (data.leads.length === 0) {
+          toast.warning("No people found. Try these tips: Use broader job titles (e.g., 'Manager' instead of 'Product Manager'), add keywords, or remove location filters.", {
+            duration: 8000,
+          });
+        } else {
+          toast.success(`Found ${data.leads.length} people!`);
+          setSearchResults(data.leads);
+          setShowResultsModal(true);
+        }
       } else {
-        toast.success(`Found ${data.leads.length} leads!`);
-        // Navigate to leads page
-        router.push("/dashboard/leads");
+        if (data.organizations.length === 0) {
+          toast.warning("No organizations found. Try these tips: Use broader keywords, remove location filters, or search for specific industries.", {
+            duration: 8000,
+          });
+        } else {
+          toast.success(`Found ${data.organizations.length} organizations!`);
+          setSearchResults(data.organizations);
+          setShowResultsModal(true);
+        }
       }
     } catch (error) {
       console.error("Search error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to search leads. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Failed to search. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -182,40 +209,80 @@ export default function DashboardPage() {
     try {
       setLoading(true);
 
-      const response = await fetch("/api/apollo/search", {
+      // Choose the appropriate endpoint based on search type
+      const endpoint = searchType === "people" 
+        ? "/api/apollo/search-people" 
+        : "/api/apollo/search-organizations";
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(parsedQuery),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to search");
+      }
+
+      const data = await response.json();
+
+      if (searchType === "people") {
+        if (data.leads.length === 0) {
+          toast.warning("No people found. Try these tips: Use broader terms (e.g., 'Engineer' instead of 'Senior Software Engineer'), add location keywords, or try different job titles.", {
+            duration: 8000,
+          });
+        } else {
+          toast.success(`Found ${data.leads.length} people!`);
+          setSearchResults(data.leads);
+          setShowResultsModal(true);
+        }
+      } else {
+        if (data.organizations.length === 0) {
+          toast.warning("No organizations found. Try these tips: Use broader industry terms, add location keywords, or search for specific company types.", {
+            duration: 8000,
+          });
+        } else {
+          toast.success(`Found ${data.organizations.length} organizations!`);
+          setSearchResults(data.organizations);
+          setShowResultsModal(true);
+        }
+      }
+    } catch (error) {
+      console.error("Search error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to search. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImportSelected = async (selectedIds: string[]) => {
+    try {
+      const selectedResults = searchResults.filter(result => selectedIds.includes(result.id));
+      
+      const response = await fetch("/api/leads/import", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          keywords: parsedQuery.keywords,
-          jobTitles: parsedQuery.jobTitles,
-          industries: parsedQuery.industries,
-          companySizes: parsedQuery.companySizes,
-          locations: parsedQuery.locations,
+          selectedResults,
+          searchType,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to search leads");
+        throw new Error(errorData.error || "Failed to import leads");
       }
 
       const data = await response.json();
-
-      if (data.leads.length === 0) {
-        toast.warning("No leads found. Try refining your search query.", {
-          duration: 5000,
-        });
-      } else {
-        toast.success(`Found ${data.leads.length} leads!`);
-        router.push("/dashboard/leads");
-      }
+      toast.success(`Successfully imported ${data.imported} ${searchType === "people" ? "people" : "organizations"} to your leads!`);
     } catch (error) {
-      console.error("Search error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to search leads. Please try again.");
-    } finally {
-      setLoading(false);
+      console.error("Import error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to import selected results");
     }
   };
 
@@ -281,16 +348,35 @@ export default function DashboardPage() {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <CardTitle>Find New Leads</CardTitle>
+              <CardTitle>Find New {searchType === "people" ? "People" : "Organizations"}</CardTitle>
               <CardDescription>
-                Use AI to parse natural language or traditional filters to search for leads.
+                Use AI to parse natural language or traditional filters to search for {searchType === "people" ? "people" : "organizations"}.
               </CardDescription>
             </div>
-            {(selectedJobTitles.length + selectedIndustries.length + selectedCompanySizes.length + selectedLocations.length + (keywords ? 1 : 0)) > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {selectedJobTitles.length + selectedIndustries.length + selectedCompanySizes.length + selectedLocations.length + (keywords ? 1 : 0)} active
-              </Badge>
-            )}
+            <div className="flex items-center gap-4">
+              {/* Search Type Toggle */}
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="search-type" className="text-sm font-medium">
+                  Organizations
+                </Label>
+                <Switch
+                  id="search-type"
+                  checked={searchType === "people"}
+                  onCheckedChange={(checked) => {
+                    setSearchType(checked ? "people" : "organizations");
+                    setParsedQuery(null); // Clear parsed query when switching types
+                  }}
+                />
+                <Label htmlFor="search-type" className="text-sm font-medium">
+                  People
+                </Label>
+              </div>
+              {(selectedJobTitles.length + selectedIndustries.length + selectedCompanySizes.length + selectedLocations.length + (keywords ? 1 : 0)) > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {selectedJobTitles.length + selectedIndustries.length + selectedCompanySizes.length + selectedLocations.length + (keywords ? 1 : 0)} active
+                </Badge>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -304,16 +390,26 @@ export default function DashboardPage() {
             <TabsContent value="ai" className="space-y-6">
               <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
                 <p className="text-sm text-blue-900 dark:text-blue-100">
-                  💡 <strong>AI-Powered Search:</strong> Simply describe who you're looking for in natural language. 
-                  Examples: "VP in SF", "CTOs in AI startups", "Product managers in NY tech companies"
+                  💡 <strong>AI-Powered Search:</strong> Simply describe what you're looking for in natural language. 
+                  {searchType === "people" ? (
+                    <>Examples: "VP in SF", "CTOs in AI startups", "Product managers in NY tech companies"</>
+                  ) : (
+                    <>Examples: "Tech companies in SF", "AI startups with 50+ employees", "Companies using React"</>
+                  )}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="ai-query">What leads are you looking for?</Label>
+                <Label htmlFor="ai-query">
+                  What {searchType === "people" ? "people" : "organizations"} are you looking for?
+                </Label>
                 <Input
                   id="ai-query"
-                  placeholder="e.g., VP in SF, CTOs in AI startups, Product managers in NY"
+                  placeholder={
+                    searchType === "people" 
+                      ? "e.g., VP in SF, CTOs in AI startups, Product managers in NY"
+                      : "e.g., Tech companies in SF, AI startups with 50+ employees, Companies using React"
+                  }
                   value={aiQuery}
                   onChange={(e) => setAiQuery(e.target.value)}
                   onKeyDown={(e) => {
@@ -341,24 +437,50 @@ export default function DashboardPage() {
                         <span className="font-medium">Keywords:</span> {parsedQuery.keywords}
                       </div>
                     )}
-                    {parsedQuery.jobTitles.length > 0 && (
+                    {parsedQuery.person_titles?.length > 0 && (
                       <div>
-                        <span className="font-medium">Job Titles:</span> {parsedQuery.jobTitles.join(", ")}
+                        <span className="font-medium">Job Titles:</span> {parsedQuery.person_titles.join(", ")}
                       </div>
                     )}
-                    {parsedQuery.industries.length > 0 && (
+                    {parsedQuery.person_seniorities?.length > 0 && (
                       <div>
-                        <span className="font-medium">Industries:</span> {parsedQuery.industries.join(", ")}
+                        <span className="font-medium">Seniority:</span> {parsedQuery.person_seniorities.join(", ")}
                       </div>
                     )}
-                    {parsedQuery.companySizes.length > 0 && (
+                    {parsedQuery.person_locations?.length > 0 && (
                       <div>
-                        <span className="font-medium">Company Sizes:</span> {parsedQuery.companySizes.join(", ")}
+                        <span className="font-medium">Person Locations:</span> {parsedQuery.person_locations.join(", ")}
                       </div>
                     )}
-                    {parsedQuery.locations.length > 0 && (
+                    {parsedQuery.organization_locations?.length > 0 && (
                       <div>
-                        <span className="font-medium">Locations:</span> {parsedQuery.locations.join(", ")}
+                        <span className="font-medium">Company Locations:</span> {parsedQuery.organization_locations.join(", ")}
+                      </div>
+                    )}
+                    {parsedQuery.organization_num_employees_ranges?.length > 0 && (
+                      <div>
+                        <span className="font-medium">Company Sizes:</span> {parsedQuery.organization_num_employees_ranges.join(", ")}
+                      </div>
+                    )}
+                    {parsedQuery.q_organization_domains_list?.length > 0 && (
+                      <div>
+                        <span className="font-medium">Company Domains:</span> {parsedQuery.q_organization_domains_list.join(", ")}
+                      </div>
+                    )}
+                    {parsedQuery.currently_using_any_of_technology_uids?.length > 0 && (
+                      <div>
+                        <span className="font-medium">Technologies:</span> {parsedQuery.currently_using_any_of_technology_uids.join(", ")}
+                      </div>
+                    )}
+                    {parsedQuery.revenue_range && (
+                      <div>
+                        <span className="font-medium">Revenue Range:</span> {
+                          parsedQuery.revenue_range.min && parsedQuery.revenue_range.max 
+                            ? `$${parsedQuery.revenue_range.min.toLocaleString()} - $${parsedQuery.revenue_range.max.toLocaleString()}`
+                            : parsedQuery.revenue_range.min 
+                              ? `$${parsedQuery.revenue_range.min.toLocaleString()}+`
+                              : `Up to $${parsedQuery.revenue_range.max.toLocaleString()}`
+                        }
                       </div>
                     )}
                   </div>
@@ -382,7 +504,7 @@ export default function DashboardPage() {
                     className="flex-1"
                     variant="default"
                   >
-                    {loading ? "Searching..." : "Search Leads"}
+                    {loading ? "Searching..." : `Search ${searchType === "people" ? "People" : "Organizations"}`}
                   </Button>
                 )}
               </div>
@@ -473,7 +595,7 @@ export default function DashboardPage() {
                   size="lg" 
                   className="flex-1"
                 >
-                  {loading ? "Searching..." : "Search Leads"}
+                  {loading ? "Searching..." : `Search ${searchType === "people" ? "People" : "Organizations"}`}
                 </Button>
                 <Button 
                   onClick={clearAllFilters} 
@@ -501,6 +623,16 @@ export default function DashboardPage() {
           <p className="text-sm text-muted-foreground">No recent activity yet. Start by searching for leads!</p>
         </CardContent>
       </Card>
+
+      {/* Search Results Modal */}
+      <SearchResultsModal
+        isOpen={showResultsModal}
+        onClose={() => setShowResultsModal(false)}
+        results={searchResults}
+        searchType={searchType}
+        onImportSelected={handleImportSelected}
+        loading={loading}
+      />
     </div>
   );
 }
