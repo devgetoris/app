@@ -19,7 +19,7 @@ interface AutomationRule {
     field: string;
     operator: string;
     value: any;
-  }>;
+  }> | null;
   priority: number | null;
   isActive: boolean | null;
 }
@@ -58,7 +58,8 @@ export async function evaluateLead(
 
     if (matchesRule) {
       // Update rule trigger count
-      await db.update(automationRules)
+      await db
+        .update(automationRules)
         .set({
           timesTriggered: (rule.timesTriggered || 0) + 1,
         })
@@ -67,9 +68,10 @@ export async function evaluateLead(
       return {
         shouldAutoApprove: rule.action === "auto_send",
         matchedRule: rule,
-        reason: rule.action === "auto_send" 
-          ? `Matched rule: ${rule.name}` 
-          : `Rule requires manual review: ${rule.name}`,
+        reason:
+          rule.action === "auto_send"
+            ? `Matched rule: ${rule.name}`
+            : `Rule requires manual review: ${rule.name}`,
       };
     }
   }
@@ -120,60 +122,64 @@ function getLeadFieldValue(lead: Lead, field: string): any {
 /**
  * Evaluate a single condition
  */
-function evaluateCondition(leadValue: any, operator: string, ruleValue: any): boolean {
+function evaluateCondition(
+  leadValue: any,
+  operator: string,
+  ruleValue: any
+): boolean {
   switch (operator) {
     case "equals":
       return leadValue === ruleValue;
-    
+
     case "not_equals":
       return leadValue !== ruleValue;
-    
+
     case "contains":
       if (typeof leadValue === "string") {
         return leadValue.toLowerCase().includes(ruleValue.toLowerCase());
       }
       if (Array.isArray(leadValue)) {
-        return leadValue.some(v => 
+        return leadValue.some((v) =>
           v.toLowerCase().includes(ruleValue.toLowerCase())
         );
       }
       return false;
-    
+
     case "not_contains":
       if (typeof leadValue === "string") {
         return !leadValue.toLowerCase().includes(ruleValue.toLowerCase());
       }
       if (Array.isArray(leadValue)) {
-        return !leadValue.some(v => 
+        return !leadValue.some((v) =>
           v.toLowerCase().includes(ruleValue.toLowerCase())
         );
       }
       return true;
-    
+
     case "in":
       if (Array.isArray(ruleValue)) {
         return ruleValue.includes(leadValue);
       }
       return false;
-    
+
     case "not_in":
       if (Array.isArray(ruleValue)) {
         return !ruleValue.includes(leadValue);
       }
       return true;
-    
+
     case "greater_than":
       return Number(leadValue) > Number(ruleValue);
-    
+
     case "less_than":
       return Number(leadValue) < Number(ruleValue);
-    
+
     case "greater_than_or_equal":
       return Number(leadValue) >= Number(ruleValue);
-    
+
     case "less_than_or_equal":
       return Number(leadValue) <= Number(ruleValue);
-    
+
     default:
       return false;
   }
@@ -212,15 +218,15 @@ export async function applyAutomationToEmail(
     updateData.status = "pending_review";
   }
 
-  await db.update(emails)
-    .set(updateData)
-    .where(eq(emails.id, emailId));
+  await db.update(emails).set(updateData).where(eq(emails.id, emailId));
 }
 
 /**
  * Create a default automation rule for a user
  */
-export async function createDefaultAutomationRule(userId: string): Promise<void> {
+export async function createDefaultAutomationRule(
+  userId: string
+): Promise<void> {
   // Check if user already has rules
   const existingRules = await db.query.automationRules.findMany({
     where: eq(automationRules.userId, userId),
@@ -234,7 +240,8 @@ export async function createDefaultAutomationRule(userId: string): Promise<void>
   await db.insert(automationRules).values({
     userId,
     name: "Auto-send to non-executives",
-    description: "Automatically send emails to leads who are not C-level executives",
+    description:
+      "Automatically send emails to leads who are not C-level executives",
     conditions: [
       {
         field: "seniority",
@@ -264,5 +271,3 @@ export async function createDefaultAutomationRule(userId: string): Promise<void>
     isActive: true,
   });
 }
-
-

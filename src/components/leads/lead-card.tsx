@@ -31,7 +31,7 @@ export function LeadCard({ lead }: { lead: Lead }) {
         <div className="flex items-start gap-4">
           <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 flex-shrink-0">
             {lead.profilePhoto ? (
-              <img
+              <Image
                 src={lead.profilePhoto}
                 alt={fullName}
                 fill
@@ -39,7 +39,8 @@ export function LeadCard({ lead }: { lead: Lead }) {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-lg font-semibold">
-                {lead.firstName?.[0]}{lead.lastName?.[0]}
+                {lead.firstName?.[0]}
+                {lead.lastName?.[0]}
               </div>
             )}
           </div>
@@ -88,9 +89,7 @@ export function LeadCard({ lead }: { lead: Lead }) {
             {lead.status || "new"}
           </Badge>
           {lead.fitScore && (
-            <Badge variant="outline">
-              Fit Score: {lead.fitScore}
-            </Badge>
+            <Badge variant="outline">Fit Score: {lead.fitScore}</Badge>
           )}
         </div>
 
@@ -133,5 +132,3 @@ export function LeadCard({ lead }: { lead: Lead }) {
     </Card>
   );
 }
-
-

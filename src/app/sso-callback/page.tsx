@@ -11,7 +11,10 @@ export default function SSOCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        await handleRedirectCallback();
+        await handleRedirectCallback({
+          afterSignInUrl: "/dashboard",
+          afterSignUpUrl: "/onboarding",
+        });
         // The callback will automatically redirect based on the redirectUrlComplete
       } catch (error) {
         console.error("SSO callback error:", error);
@@ -31,4 +34,3 @@ export default function SSOCallback() {
     </div>
   );
 }
-
