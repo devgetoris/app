@@ -19,7 +19,7 @@ export default async function EmailsPage() {
   });
 
   if (!user) {
-    redirect("/onboarding");
+    redirect("/sign-in");
   }
 
   // Get emails with their associated leads
@@ -159,5 +159,7 @@ export default async function EmailsPage() {
     </div>
   );
 }
+
+
 
 

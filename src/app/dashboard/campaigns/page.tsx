@@ -19,7 +19,7 @@ export default async function CampaignsPage() {
   });
 
   if (!user) {
-    redirect("/onboarding");
+    redirect("/sign-in");
   }
 
   // Get all campaigns for this user
@@ -126,5 +126,7 @@ export default async function CampaignsPage() {
     </div>
   );
 }
+
+
 
 

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -55,6 +57,9 @@ export default function DashboardPage() {
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedCompanySizes, setSelectedCompanySizes] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [aiQuery, setAiQuery] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [parsedQuery, setParsedQuery] = useState<any>(null);
 
   const clearAllFilters = () => {
     setKeywords("");
@@ -118,6 +123,92 @@ export default function DashboardPage() {
       } else {
         toast.success(`Found ${data.leads.length} leads!`);
         // Navigate to leads page
+        router.push("/dashboard/leads");
+      }
+    } catch (error) {
+      console.error("Search error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to search leads. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAiSearch = async () => {
+    if (!aiQuery.trim()) {
+      toast.error("Please enter a search query");
+      return;
+    }
+
+    try {
+      setAiLoading(true);
+      console.log("🤖 Parsing AI query:", aiQuery);
+
+      const response = await fetch("/api/apollo/parse-query", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: aiQuery,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to parse query");
+      }
+
+      const data = await response.json();
+      console.log("✅ Parsed query result:", data);
+
+      setParsedQuery(data.parsed);
+      toast.success("Query parsed successfully! Review and click 'Search' to find leads.");
+    } catch (error) {
+      console.error("AI parse error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to parse query with AI. Please try again."
+      );
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleSearchWithParsedQuery = async () => {
+    if (!parsedQuery) {
+      toast.error("Please parse a query first");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch("/api/apollo/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          keywords: parsedQuery.keywords,
+          jobTitles: parsedQuery.jobTitles,
+          industries: parsedQuery.industries,
+          companySizes: parsedQuery.companySizes,
+          locations: parsedQuery.locations,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to search leads");
+      }
+
+      const data = await response.json();
+
+      if (data.leads.length === 0) {
+        toast.warning("No leads found. Try refining your search query.", {
+          duration: 5000,
+        });
+      } else {
+        toast.success(`Found ${data.leads.length} leads!`);
         router.push("/dashboard/leads");
       }
     } catch (error) {
@@ -192,7 +283,7 @@ export default function DashboardPage() {
             <div className="flex-1">
               <CardTitle>Find New Leads</CardTitle>
               <CardDescription>
-                Search for leads using Apollo API. Start broad with 1-2 filters, then refine as needed.
+                Use AI to parse natural language or traditional filters to search for leads.
               </CardDescription>
             </div>
             {(selectedJobTitles.length + selectedIndustries.length + selectedCompanySizes.length + selectedLocations.length + (keywords ? 1 : 0)) > 0 && (
@@ -201,101 +292,200 @@ export default function DashboardPage() {
               </Badge>
             )}
           </div>
-          <div className="mt-3 p-3 bg-muted rounded-lg text-sm">
-            <p className="font-medium mb-1">💡 Search Tips:</p>
-            <ul className="text-muted-foreground space-y-1 text-xs">
-              <li>• Use <strong>"Select All"</strong> or click multiple items at once for faster selection</li>
-              <li>• Start with just a <strong>Location</strong> or <strong>Job Title</strong> for broader results</li>
-              <li>• Combining multiple filters narrows your search significantly</li>
-              <li>• Click the X on badges to remove individual selections</li>
-            </ul>
-          </div>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Keywords */}
-          <div className="space-y-2">
-            <Label htmlFor="keywords">Keywords</Label>
-            <Input
-              id="keywords"
-              placeholder="e.g., AI, machine learning, cloud computing"
-              value={keywords}
-              onChange={(e) => setKeywords(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Search for specific keywords in profiles and companies
-            </p>
-          </div>
+        <CardContent>
+          <Tabs defaultValue="ai" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="ai">🤖 AI Search</TabsTrigger>
+              <TabsTrigger value="advanced">Advanced</TabsTrigger>
+            </TabsList>
 
-          {/* Job Titles */}
-          <div className="space-y-3">
-            <Label>Job Titles</Label>
-            <MultiSelect
-              options={JOB_TITLES}
-              onValueChange={setSelectedJobTitles}
-              defaultValue={selectedJobTitles}
-              placeholder="Select job titles"
-              variant="secondary"
-              maxCount={3}
-            />
-          </div>
+            {/* AI Search Tab */}
+            <TabsContent value="ai" className="space-y-6">
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-blue-900 dark:text-blue-100">
+                  💡 <strong>AI-Powered Search:</strong> Simply describe who you're looking for in natural language. 
+                  Examples: "VP in SF", "CTOs in AI startups", "Product managers in NY tech companies"
+                </p>
+              </div>
 
-          {/* Industries */}
-          <div className="space-y-3">
-            <Label>Industries</Label>
-            <MultiSelect
-              options={INDUSTRIES}
-              onValueChange={setSelectedIndustries}
-              defaultValue={selectedIndustries}
-              placeholder="Select industries"
-              variant="secondary"
-              maxCount={3}
-            />
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="ai-query">What leads are you looking for?</Label>
+                <Input
+                  id="ai-query"
+                  placeholder="e.g., VP in SF, CTOs in AI startups, Product managers in NY"
+                  value={aiQuery}
+                  onChange={(e) => setAiQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !aiLoading) {
+                      handleAiSearch();
+                    }
+                  }}
+                  disabled={aiLoading}
+                  className="text-base"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Press Enter or click "Parse Query" to let AI understand your search
+                </p>
+              </div>
 
-          {/* Company Sizes */}
-          <div className="space-y-3">
-            <Label>Company Sizes</Label>
-            <MultiSelect
-              options={COMPANY_SIZES}
-              onValueChange={setSelectedCompanySizes}
-              defaultValue={selectedCompanySizes}
-              placeholder="Select company sizes"
-              variant="secondary"
-              maxCount={3}
-            />
-          </div>
+              {/* Parsed Query Preview */}
+              {parsedQuery && (
+                <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                  <p className="text-sm font-medium text-green-900 dark:text-green-100 mb-3">
+                    ✅ Parsed Search Parameters:
+                  </p>
+                  <div className="space-y-2 text-sm">
+                    {parsedQuery.keywords && (
+                      <div>
+                        <span className="font-medium">Keywords:</span> {parsedQuery.keywords}
+                      </div>
+                    )}
+                    {parsedQuery.jobTitles.length > 0 && (
+                      <div>
+                        <span className="font-medium">Job Titles:</span> {parsedQuery.jobTitles.join(", ")}
+                      </div>
+                    )}
+                    {parsedQuery.industries.length > 0 && (
+                      <div>
+                        <span className="font-medium">Industries:</span> {parsedQuery.industries.join(", ")}
+                      </div>
+                    )}
+                    {parsedQuery.companySizes.length > 0 && (
+                      <div>
+                        <span className="font-medium">Company Sizes:</span> {parsedQuery.companySizes.join(", ")}
+                      </div>
+                    )}
+                    {parsedQuery.locations.length > 0 && (
+                      <div>
+                        <span className="font-medium">Locations:</span> {parsedQuery.locations.join(", ")}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
-          {/* Locations */}
-          <div className="space-y-3">
-            <Label>Locations</Label>
-            <MultiSelect
-              options={LOCATIONS}
-              onValueChange={setSelectedLocations}
-              defaultValue={selectedLocations}
-              placeholder="Select locations"
-              variant="secondary"
-              maxCount={3}
-            />
-          </div>
+              <div className="pt-2 flex gap-3">
+                <Button
+                  onClick={handleAiSearch}
+                  disabled={aiLoading || !aiQuery.trim()}
+                  size="lg"
+                  className="flex-1"
+                >
+                  {aiLoading ? "Parsing..." : "Parse Query"}
+                </Button>
+                {parsedQuery && (
+                  <Button
+                    onClick={handleSearchWithParsedQuery}
+                    disabled={loading}
+                    size="lg"
+                    className="flex-1"
+                    variant="default"
+                  >
+                    {loading ? "Searching..." : "Search Leads"}
+                  </Button>
+                )}
+              </div>
+            </TabsContent>
 
-          <div className="pt-4 flex gap-3">
-            <Button 
-              onClick={handleSearch} 
-              disabled={loading} 
-              size="lg" 
-              className="flex-1"
-            >
-              {loading ? "Searching..." : "Search Leads"}
-            </Button>
-            <Button 
-              onClick={clearAllFilters} 
-              disabled={loading} 
-              variant="outline" 
-              size="lg"
-            >
-              Clear All
-            </Button>
-          </div>
+            {/* Advanced Search Tab */}
+            <TabsContent value="advanced" className="space-y-6">
+              <div className="p-3 bg-muted rounded-lg text-sm">
+                <p className="font-medium mb-1">💡 Search Tips:</p>
+                <ul className="text-muted-foreground space-y-1 text-xs">
+                  <li>• Use <strong>"Select All"</strong> or click multiple items at once for faster selection</li>
+                  <li>• Start with just a <strong>Location</strong> or <strong>Job Title</strong> for broader results</li>
+                  <li>• Combining multiple filters narrows your search significantly</li>
+                  <li>• Click the X on badges to remove individual selections</li>
+                </ul>
+              </div>
+
+              {/* Keywords */}
+              <div className="space-y-2">
+                <Label htmlFor="keywords">Keywords</Label>
+                <Input
+                  id="keywords"
+                  placeholder="e.g., AI, machine learning, cloud computing"
+                  value={keywords}
+                  onChange={(e) => setKeywords(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Search for specific keywords in profiles and companies
+                </p>
+              </div>
+
+              {/* Job Titles */}
+              <div className="space-y-3">
+                <Label>Job Titles</Label>
+                <MultiSelect
+                  options={JOB_TITLES}
+                  onValueChange={setSelectedJobTitles}
+                  defaultValue={selectedJobTitles}
+                  placeholder="Select job titles"
+                  variant="secondary"
+                  maxCount={3}
+                />
+              </div>
+
+              {/* Industries */}
+              <div className="space-y-3">
+                <Label>Industries</Label>
+                <MultiSelect
+                  options={INDUSTRIES}
+                  onValueChange={setSelectedIndustries}
+                  defaultValue={selectedIndustries}
+                  placeholder="Select industries"
+                  variant="secondary"
+                  maxCount={3}
+                />
+              </div>
+
+              {/* Company Sizes */}
+              <div className="space-y-3">
+                <Label>Company Sizes</Label>
+                <MultiSelect
+                  options={COMPANY_SIZES}
+                  onValueChange={setSelectedCompanySizes}
+                  defaultValue={selectedCompanySizes}
+                  placeholder="Select company sizes"
+                  variant="secondary"
+                  maxCount={3}
+                />
+              </div>
+
+              {/* Locations */}
+              <div className="space-y-3">
+                <Label>Locations</Label>
+                <MultiSelect
+                  options={LOCATIONS}
+                  onValueChange={setSelectedLocations}
+                  defaultValue={selectedLocations}
+                  placeholder="Select locations"
+                  variant="secondary"
+                  maxCount={3}
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <Button 
+                  onClick={handleSearch} 
+                  disabled={loading} 
+                  size="lg" 
+                  className="flex-1"
+                >
+                  {loading ? "Searching..." : "Search Leads"}
+                </Button>
+                <Button 
+                  onClick={clearAllFilters} 
+                  disabled={loading} 
+                  variant="outline" 
+                  size="lg"
+                >
+                  Clear All
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
