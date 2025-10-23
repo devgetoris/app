@@ -8,6 +8,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Switch } from "@/components/ui/switch";
-import { SearchResultsModal } from "@/components/leads/search-results-modal";
+import { InlineSearchResults } from "@/components/leads/inline-search-results";
 
 // Predefined options for multi-select
 const JOB_TITLES = [
@@ -43,7 +50,7 @@ const JOB_TITLES = [
   "Marketing Manager",
   "Sales Representative",
   "Account Executive",
-].map(title => ({ label: title, value: title }));
+].map((title) => ({ label: title, value: title }));
 
 const INDUSTRIES = [
   "Computer Software",
@@ -76,7 +83,7 @@ const INDUSTRIES = [
   "Telecommunications",
   "Cloud Computing",
   "Cybersecurity",
-].map(industry => ({ label: industry, value: industry }));
+].map((industry) => ({ label: industry, value: industry }));
 
 const COMPANY_SIZES = [
   "1-10",
@@ -87,7 +94,7 @@ const COMPANY_SIZES = [
   "1001-5000",
   "5001-10000",
   "10001+",
-].map(size => ({ label: `${size} employees`, value: size }));
+].map((size) => ({ label: `${size} employees`, value: size }));
 
 const LOCATIONS = [
   "United States",
@@ -120,24 +127,27 @@ const LOCATIONS = [
   "Amsterdam",
   "Paris",
   "Toronto",
-].map(location => ({ label: location, value: location }));
+].map((location) => ({ label: location, value: location }));
 
 export default function DashboardPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [searchType, setSearchType] = useState<"people" | "organizations">("people");
+  const [searchType, setSearchType] = useState<"people" | "organizations">(
+    "people"
+  );
   const [keywords, setKeywords] = useState("");
   const [selectedJobTitles, setSelectedJobTitles] = useState<string[]>([]);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedCompanySizes, setSelectedCompanySizes] = useState<string[]>(
     []
   );
+  const [selectedCompanySizes, setSelectedCompanySizes] = useState<string[]>(
+    []
+  );
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [aiQuery, setAiQuery] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
-  const [parsedQuery, setParsedQuery] = useState<any>(null);
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [showResultsModal, setShowResultsModal] = useState(false);
 
   const clearAllFilters = () => {
     setKeywords("");
@@ -150,6 +160,7 @@ export default function DashboardPage() {
 
   const handleSearch = async () => {
     // Validate that at least one search criterion is provided
+    const hasAnyCriteria =
     const hasAnyCriteria =
       keywords.trim() ||
       selectedJobTitles.length > 0 ||
@@ -166,9 +177,10 @@ export default function DashboardPage() {
       setLoading(true);
 
       // Choose the appropriate endpoint based on search type
-      const endpoint = searchType === "people" 
-        ? "/api/apollo/search-people" 
-        : "/api/apollo/search-organizations";
+      const endpoint =
+        searchType === "people"
+          ? "/api/apollo/search-people"
+          : "/api/apollo/search-organizations";
 
       console.log("Sending search request:", {
         searchType,
@@ -191,8 +203,10 @@ export default function DashboardPage() {
           organization_locations: selectedLocations,
           organization_num_employees_ranges: selectedCompanySizes,
           // Map industries to keywords for broader search
-          ...(selectedIndustries.length > 0 && { 
-            keywords: keywords ? `${keywords} ${selectedIndustries.join(" ")}` : selectedIndustries.join(" ")
+          ...(selectedIndustries.length > 0 && {
+            keywords: keywords
+              ? `${keywords} ${selectedIndustries.join(" ")}`
+              : selectedIndustries.join(" "),
           }),
         }),
       });
@@ -203,31 +217,39 @@ export default function DashboardPage() {
       }
 
       const data = await response.json();
-      
+
       if (searchType === "people") {
         if (data.leads.length === 0) {
-          toast.warning("No people found. Try these tips: Use broader job titles (e.g., 'Manager' instead of 'Product Manager'), add keywords, or remove location filters.", {
-            duration: 8000,
-          });
+          toast.warning(
+            "No people found. Try these tips: Use broader job titles (e.g., 'Manager' instead of 'Product Manager'), add keywords, or remove location filters.",
+            {
+              duration: 8000,
+            }
+          );
         } else {
           toast.success(`Found ${data.leads.length} people!`);
           setSearchResults(data.leads);
-          setShowResultsModal(true);
         }
       } else {
         if (data.organizations.length === 0) {
-          toast.warning("No organizations found. Try these tips: Use broader keywords, remove location filters, or search for specific industries.", {
-            duration: 8000,
-          });
+          toast.warning(
+            "No organizations found. Try these tips: Use broader keywords, remove location filters, or search for specific industries.",
+            {
+              duration: 8000,
+            }
+          );
         } else {
           toast.success(`Found ${data.organizations.length} organizations!`);
           setSearchResults(data.organizations);
-          setShowResultsModal(true);
         }
       }
     } catch (error) {
       console.error("Search error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to search. Please try again.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to search. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -241,9 +263,10 @@ export default function DashboardPage() {
 
     try {
       setAiLoading(true);
-      console.log("🤖 Parsing AI query:", aiQuery);
+      console.log("🤖 AI Search - Direct search:", aiQuery);
 
-      const response = await fetch("/api/apollo/parse-query", {
+      // First parse the query
+      const parseResponse = await fetch("/api/apollo/parse-query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -253,88 +276,89 @@ export default function DashboardPage() {
         }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
+      if (!parseResponse.ok) {
+        const errorData = await parseResponse.json();
         throw new Error(errorData.error || "Failed to parse query");
       }
 
-      const data = await response.json();
-      console.log("✅ Parsed query result:", data);
+      const parseData = await parseResponse.json();
+      console.log("✅ Parsed query result:", parseData);
 
-      setParsedQuery(data.parsed);
-      toast.success("Query parsed successfully! Review and click 'Search' to find leads.");
+      // Then immediately search with the parsed query
+      const endpoint =
+        searchType === "people"
+          ? "/api/apollo/search"
+          : "/api/apollo/search-organizations";
+
+      const searchResponse = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(parseData.parsed),
+      });
+
+      if (!searchResponse.ok) {
+        const errorData = await searchResponse.json();
+        throw new Error(errorData.error || "Failed to search");
+      }
+
+      const searchData = await searchResponse.json();
+
+      // Debug: Log the search results data
+      console.log("🔍 Search results received:", searchData);
+      if (searchData.leads && searchData.leads.length > 0) {
+        console.log(
+          "📋 Sample lead from search results:",
+          JSON.stringify(searchData.leads[0], null, 2)
+        );
+      }
+
+      if (searchType === "people") {
+        if (searchData.leads.length === 0) {
+          toast.warning(
+            "No people found. Try these tips: Use broader terms (e.g., 'Engineer' instead of 'Senior Software Engineer'), add location keywords, or try different job titles.",
+            {
+              duration: 8000,
+            }
+          );
+        } else {
+          toast.success(`Found ${searchData.leads.length} people!`);
+          setSearchResults(searchData.leads);
+        }
+      } else {
+        if (searchData.organizations.length === 0) {
+          toast.warning(
+            "No organizations found. Try these tips: Use broader industry terms, add location keywords, or search for specific company types.",
+            {
+              duration: 8000,
+            }
+          );
+        } else {
+          toast.success(
+            `Found ${searchData.organizations.length} organizations!`
+          );
+          setSearchResults(searchData.organizations);
+        }
+      }
     } catch (error) {
-      console.error("AI parse error:", error);
+      console.error("AI search error:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to parse query with AI. Please try again."
+        error instanceof Error
+          ? error.message
+          : "Failed to search with AI. Please try again."
       );
     } finally {
       setAiLoading(false);
     }
   };
 
-  const handleSearchWithParsedQuery = async () => {
-    if (!parsedQuery) {
-      toast.error("Please parse a query first");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      // Choose the appropriate endpoint based on search type
-      const endpoint = searchType === "people" 
-        ? "/api/apollo/search-people" 
-        : "/api/apollo/search-organizations";
-
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(parsedQuery),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to search");
-      }
-
-      const data = await response.json();
-
-      if (searchType === "people") {
-        if (data.leads.length === 0) {
-          toast.warning("No people found. Try these tips: Use broader terms (e.g., 'Engineer' instead of 'Senior Software Engineer'), add location keywords, or try different job titles.", {
-            duration: 8000,
-          });
-        } else {
-          toast.success(`Found ${data.leads.length} people!`);
-          setSearchResults(data.leads);
-          setShowResultsModal(true);
-        }
-      } else {
-        if (data.organizations.length === 0) {
-          toast.warning("No organizations found. Try these tips: Use broader industry terms, add location keywords, or search for specific company types.", {
-            duration: 8000,
-          });
-        } else {
-          toast.success(`Found ${data.organizations.length} organizations!`);
-          setSearchResults(data.organizations);
-          setShowResultsModal(true);
-        }
-      }
-    } catch (error) {
-      console.error("Search error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to search. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleImportSelected = async (selectedIds: string[]) => {
     try {
-      const selectedResults = searchResults.filter(result => selectedIds.includes(result.id));
-      
+      const selectedResults = searchResults.filter((result) =>
+        selectedIds.includes(result.id)
+      );
+
       const response = await fetch("/api/leads/import", {
         method: "POST",
         headers: {
@@ -352,10 +376,18 @@ export default function DashboardPage() {
       }
 
       const data = await response.json();
-      toast.success(`Successfully imported ${data.imported} ${searchType === "people" ? "people" : "organizations"} to your leads!`);
+      toast.success(
+        `Successfully imported ${data.imported} ${
+          searchType === "people" ? "people" : "organizations"
+        } to your leads!`
+      );
     } catch (error) {
       console.error("Import error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to import selected results");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to import selected results"
+      );
     }
   };
 
@@ -365,6 +397,8 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground mt-2">
+          Welcome back! Start by searching for leads or manage your existing
+          campaigns.
           Welcome back! Start by searching for leads or manage your existing
           campaigns.
         </p>
@@ -422,9 +456,13 @@ export default function DashboardPage() {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <CardTitle>Find New {searchType === "people" ? "People" : "Organizations"}</CardTitle>
+              <CardTitle>
+                Find New {searchType === "people" ? "People" : "Organizations"}
+              </CardTitle>
               <CardDescription>
-                Use AI to parse natural language or traditional filters to search for {searchType === "people" ? "people" : "organizations"}.
+                Use AI to parse natural language or traditional filters to
+                search for{" "}
+                {searchType === "people" ? "people" : "organizations"}.
               </CardDescription>
             </div>
             <div className="flex items-center gap-4">
@@ -438,16 +476,25 @@ export default function DashboardPage() {
                   checked={searchType === "people"}
                   onCheckedChange={(checked) => {
                     setSearchType(checked ? "people" : "organizations");
-                    setParsedQuery(null); // Clear parsed query when switching types
                   }}
                 />
                 <Label htmlFor="search-type" className="text-sm font-medium">
                   People
                 </Label>
               </div>
-              {(selectedJobTitles.length + selectedIndustries.length + selectedCompanySizes.length + selectedLocations.length + (keywords ? 1 : 0)) > 0 && (
+              {selectedJobTitles.length +
+                selectedIndustries.length +
+                selectedCompanySizes.length +
+                selectedLocations.length +
+                (keywords ? 1 : 0) >
+                0 && (
                 <Badge variant="secondary" className="ml-2">
-                  {selectedJobTitles.length + selectedIndustries.length + selectedCompanySizes.length + selectedLocations.length + (keywords ? 1 : 0)} active
+                  {selectedJobTitles.length +
+                    selectedIndustries.length +
+                    selectedCompanySizes.length +
+                    selectedLocations.length +
+                    (keywords ? 1 : 0)}{" "}
+                  active
                 </Badge>
               )}
             </div>
@@ -462,25 +509,15 @@ export default function DashboardPage() {
 
             {/* AI Search Tab */}
             <TabsContent value="ai" className="space-y-6">
-              <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p className="text-sm text-blue-900 dark:text-blue-100">
-                  💡 <strong>AI-Powered Search:</strong> Simply describe what you're looking for in natural language. 
-                  {searchType === "people" ? (
-                    <>Examples: "VP in SF", "CTOs in AI startups", "Product managers in NY tech companies"</>
-                  ) : (
-                    <>Examples: "Tech companies in SF", "AI startups with 50+ employees", "Companies using React"</>
-                  )}
-                </p>
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="ai-query">
-                  What {searchType === "people" ? "people" : "organizations"} are you looking for?
+                  What {searchType === "people" ? "people" : "organizations"}{" "}
+                  are you looking for?
                 </Label>
                 <Input
                   id="ai-query"
                   placeholder={
-                    searchType === "people" 
+                    searchType === "people"
                       ? "e.g., VP in SF, CTOs in AI startups, Product managers in NY"
                       : "e.g., Tech companies in SF, AI startups with 50+ employees, Companies using React"
                   }
@@ -494,72 +531,8 @@ export default function DashboardPage() {
                   disabled={aiLoading}
                   className="text-base"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Press Enter or click "Parse Query" to let AI understand your search
-                </p>
+                <p className="text-xs text-muted-foreground"></p>
               </div>
-
-              {/* Parsed Query Preview */}
-              {parsedQuery && (
-                <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-                  <p className="text-sm font-medium text-green-900 dark:text-green-100 mb-3">
-                    ✅ Parsed Search Parameters:
-                  </p>
-                  <div className="space-y-2 text-sm">
-                    {parsedQuery.keywords && (
-                      <div>
-                        <span className="font-medium">Keywords:</span> {parsedQuery.keywords}
-                      </div>
-                    )}
-                    {parsedQuery.person_titles?.length > 0 && (
-                      <div>
-                        <span className="font-medium">Job Titles:</span> {parsedQuery.person_titles.join(", ")}
-                      </div>
-                    )}
-                    {parsedQuery.person_seniorities?.length > 0 && (
-                      <div>
-                        <span className="font-medium">Seniority:</span> {parsedQuery.person_seniorities.join(", ")}
-                      </div>
-                    )}
-                    {parsedQuery.person_locations?.length > 0 && (
-                      <div>
-                        <span className="font-medium">Person Locations:</span> {parsedQuery.person_locations.join(", ")}
-                      </div>
-                    )}
-                    {parsedQuery.organization_locations?.length > 0 && (
-                      <div>
-                        <span className="font-medium">Company Locations:</span> {parsedQuery.organization_locations.join(", ")}
-                      </div>
-                    )}
-                    {parsedQuery.organization_num_employees_ranges?.length > 0 && (
-                      <div>
-                        <span className="font-medium">Company Sizes:</span> {parsedQuery.organization_num_employees_ranges.join(", ")}
-                      </div>
-                    )}
-                    {parsedQuery.q_organization_domains_list?.length > 0 && (
-                      <div>
-                        <span className="font-medium">Company Domains:</span> {parsedQuery.q_organization_domains_list.join(", ")}
-                      </div>
-                    )}
-                    {parsedQuery.currently_using_any_of_technology_uids?.length > 0 && (
-                      <div>
-                        <span className="font-medium">Technologies:</span> {parsedQuery.currently_using_any_of_technology_uids.join(", ")}
-                      </div>
-                    )}
-                    {parsedQuery.revenue_range && (
-                      <div>
-                        <span className="font-medium">Revenue Range:</span> {
-                          parsedQuery.revenue_range.min && parsedQuery.revenue_range.max 
-                            ? `$${parsedQuery.revenue_range.min.toLocaleString()} - $${parsedQuery.revenue_range.max.toLocaleString()}`
-                            : parsedQuery.revenue_range.min 
-                              ? `$${parsedQuery.revenue_range.min.toLocaleString()}+`
-                              : `Up to $${parsedQuery.revenue_range.max.toLocaleString()}`
-                        }
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
 
               <div className="pt-2 flex gap-3">
                 <Button
@@ -568,19 +541,12 @@ export default function DashboardPage() {
                   size="lg"
                   className="flex-1"
                 >
-                  {aiLoading ? "Parsing..." : "Parse Query"}
+                  {aiLoading
+                    ? "Searching..."
+                    : `Search ${
+                        searchType === "people" ? "People" : "Organizations"
+                      }`}
                 </Button>
-                {parsedQuery && (
-                  <Button
-                    onClick={handleSearchWithParsedQuery}
-                    disabled={loading}
-                    size="lg"
-                    className="flex-1"
-                    variant="default"
-                  >
-                    {loading ? "Searching..." : `Search ${searchType === "people" ? "People" : "Organizations"}`}
-                  </Button>
-                )}
               </div>
             </TabsContent>
 
@@ -589,10 +555,21 @@ export default function DashboardPage() {
               <div className="p-3 bg-muted rounded-lg text-sm">
                 <p className="font-medium mb-1">💡 Search Tips:</p>
                 <ul className="text-muted-foreground space-y-1 text-xs">
-                  <li>• Use <strong>"Select All"</strong> or click multiple items at once for faster selection</li>
-                  <li>• Start with just a <strong>Location</strong> or <strong>Job Title</strong> for broader results</li>
-                  <li>• Combining multiple filters narrows your search significantly</li>
-                  <li>• Click the X on badges to remove individual selections</li>
+                  <li>
+                    • Use <strong>"Select All"</strong> or click multiple items
+                    at once for faster selection
+                  </li>
+                  <li>
+                    • Start with just a <strong>Location</strong> or{" "}
+                    <strong>Job Title</strong> for broader results
+                  </li>
+                  <li>
+                    • Combining multiple filters narrows your search
+                    significantly
+                  </li>
+                  <li>
+                    • Click the X on badges to remove individual selections
+                  </li>
                 </ul>
               </div>
 
@@ -663,18 +640,22 @@ export default function DashboardPage() {
               </div>
 
               <div className="pt-4 flex gap-3">
-                <Button 
-                  onClick={handleSearch} 
-                  disabled={loading} 
-                  size="lg" 
+                <Button
+                  onClick={handleSearch}
+                  disabled={loading}
+                  size="lg"
                   className="flex-1"
                 >
-                  {loading ? "Searching..." : `Search ${searchType === "people" ? "People" : "Organizations"}`}
+                  {loading
+                    ? "Searching..."
+                    : `Search ${
+                        searchType === "people" ? "People" : "Organizations"
+                      }`}
                 </Button>
-                <Button 
-                  onClick={clearAllFilters} 
-                  disabled={loading} 
-                  variant="outline" 
+                <Button
+                  onClick={clearAllFilters}
+                  disabled={loading}
+                  variant="outline"
                   size="lg"
                 >
                   Clear All
@@ -685,28 +666,43 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
+      {/* Recent Search Results */}
+      {searchResults.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Search Results</CardTitle>
+            <CardDescription>
+              Your latest search results - select and import to add to your
+              leads
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <InlineSearchResults
+              results={searchResults}
+              searchType={searchType}
+              onImportSelected={handleImportSelected}
+              loading={loading}
+            />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Recent Activity */}
       <Card>
         <CardHeader>
           <CardTitle>Recent Activity</CardTitle>
+          <CardDescription>Your latest actions and updates</CardDescription>
           <CardDescription>Your latest actions and updates</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
             No recent activity yet. Start by searching for leads!
           </p>
+          <p className="text-sm text-muted-foreground">
+            No recent activity yet. Start by searching for leads!
+          </p>
         </CardContent>
       </Card>
-
-      {/* Search Results Modal */}
-      <SearchResultsModal
-        isOpen={showResultsModal}
-        onClose={() => setShowResultsModal(false)}
-        results={searchResults}
-        searchType={searchType}
-        onImportSelected={handleImportSelected}
-        loading={loading}
-      />
     </div>
   );
 }
