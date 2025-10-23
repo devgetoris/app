@@ -320,17 +320,46 @@ export async function POST(request: NextRequest) {
             status: "new",
           }).returning();
 
-          savedLeads.push(newLead);
+          // Return the enriched data for display
+          savedLeads.push({
+            ...newLead,
+            // Ensure we have the enriched email and other data
+            email: enrichedContact.email,
+            firstName: enrichedContact.first_name,
+            lastName: enrichedContact.last_name,
+            title: enrichedContact.title,
+            companyName: enrichedContact.organization?.name,
+            linkedinUrl: enrichedContact.linkedin_url,
+            profilePhoto: enrichedContact.photo_url,
+            bio: enrichedContact.headline,
+          });
         } else {
           console.log(`   ℹ️ Lead already exists in database`);
-          // Add existing leads regardless of email status
-          savedLeads.push(existingLead);
+          // Return the existing lead with enriched data
+          savedLeads.push({
+            ...existingLead,
+            // Ensure we have the enriched email and other data
+            email: enrichedContact.email,
+            firstName: enrichedContact.first_name,
+            lastName: enrichedContact.last_name,
+            title: enrichedContact.title,
+            companyName: enrichedContact.organization?.name,
+            linkedinUrl: enrichedContact.linkedin_url,
+            profilePhoto: enrichedContact.photo_url,
+            bio: enrichedContact.headline,
+          });
         }
       }
     }
 
     console.log(`\n✨ Search complete. Saved ${savedLeads.length} leads.`);
+    
+    // Log the first few leads to debug the data structure
+    if (savedLeads.length > 0) {
+      console.log("📋 Sample lead data being returned:", JSON.stringify(savedLeads[0], null, 2));
+    }
 
+    // Return the enriched leads data instead of original search results
     return NextResponse.json({
       success: true,
       leads: savedLeads,
