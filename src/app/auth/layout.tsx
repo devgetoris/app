@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -14,6 +15,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex relative">
       {/* Navigation Buttons - Top Right */}
       <div className="absolute top-4 right-4 z-10 flex gap-2">
+        <ThemeToggle />
         {!isSignIn && (
           <Link href="/auth/sign-in">
             <Button variant="ghost" size="sm">
@@ -57,7 +59,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
                 O
               </span>
             </div>
-            <span className="text-2xl font-bold text-primary">Oris AI</span>
+            <span className="text-2xl font-bold text-primary">OrisAI</span>
           </div>
         </div>
 
@@ -65,7 +67,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         <div className="absolute bottom-12 left-12 z-10">
           <div className="space-y-4">
             <blockquote className="text-lg text-slate-300 italic">
-              "Oris AI transformed our outreach process. We went from spending
+              "OrisAI transformed our outreach process. We went from spending
               hours researching leads and writing emails to generating
               personalized, high-converting messages in seconds. Our response
               rates increased by 3x."

@@ -138,7 +138,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <div className="flex items-center gap-2 px-2 py-1.5">
-              <UserButton afterSignOutUrl="/" />
+              <UserButton afterSignOutUrl="/auth/sign-in" />
             </div>
           </SidebarMenuItem>
         </SidebarMenu>
