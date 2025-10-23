@@ -253,7 +253,7 @@ export default function OnboardingPage() {
                 O
               </span>
             </div>
-            <span className="text-2xl font-bold">Oris AI</span>
+            <span className="text-2xl font-bold">OrisAI</span>
           </div>
         </div>
 
