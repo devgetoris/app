@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     // Log the event
     await db.insert(emailEvents).values({
       emailId: email.id,
-      eventType: type.replace('email.', ''),
+      eventType: type.replace("email.", ""),
       eventData: data,
     });
 
@@ -37,39 +37,37 @@ export async function POST(request: NextRequest) {
     };
 
     switch (type) {
-      case 'email.delivered':
+      case "email.delivered":
         updateData.deliveredAt = new Date();
         break;
 
-      case 'email.opened':
+      case "email.opened":
         if (!email.openedAt) {
           updateData.openedAt = new Date();
         }
         updateData.openCount = (email.openCount || 0) + 1;
         break;
 
-      case 'email.clicked':
+      case "email.clicked":
         if (!email.clickedAt) {
           updateData.clickedAt = new Date();
         }
         updateData.clickCount = (email.clickCount || 0) + 1;
         break;
 
-      case 'email.bounced':
-        updateData.status = 'bounced';
+      case "email.bounced":
+        updateData.status = "bounced";
         updateData.bouncedAt = new Date();
         break;
 
-      case 'email.complained':
+      case "email.complained":
         // Handle spam complaints
-        updateData.status = 'failed';
-        updateData.errorMessage = 'Spam complaint received';
+        updateData.status = "failed";
+        updateData.errorMessage = "Spam complaint received";
         break;
     }
 
-    await db.update(emails)
-      .set(updateData)
-      .where(eq(emails.id, email.id));
+    await db.update(emails).set(updateData).where(eq(emails.id, email.id));
 
     return NextResponse.json({ success: true });
   } catch (error) {

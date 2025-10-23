@@ -30,14 +30,22 @@ interface Lead {
   companyName: string | null;
 }
 
-export function EmailReviewCard({ email, lead }: { email: Email; lead: Lead | null }) {
+export function EmailReviewCard({
+  email,
+  lead,
+}: {
+  email: Email;
+  lead: Lead | null;
+}) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [editedSubject, setEditedSubject] = useState(email.subject);
   const [editedBody, setEditedBody] = useState(email.body);
   const [loading, setLoading] = useState(false);
 
-  const leadName = lead ? `${lead.firstName || ""} ${lead.lastName || ""}`.trim() : "Unknown";
+  const leadName = lead
+    ? `${lead.firstName || ""} ${lead.lastName || ""}`.trim()
+    : "Unknown";
 
   const handleSend = async () => {
     try {
@@ -105,12 +113,12 @@ export function EmailReviewCard({ email, lead }: { email: Email; lead: Lead | nu
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <h3 className="font-semibold text-lg">{leadName}</h3>
-              <Badge variant={email.status === "sent" ? "default" : "secondary"}>
+              <Badge
+                variant={email.status === "sent" ? "default" : "secondary"}
+              >
                 {email.status}
               </Badge>
-              {email.tone && (
-                <Badge variant="outline">{email.tone}</Badge>
-              )}
+              {email.tone && <Badge variant="outline">{email.tone}</Badge>}
             </div>
             {lead && (
               <div className="text-sm text-muted-foreground">
@@ -140,7 +148,7 @@ export function EmailReviewCard({ email, lead }: { email: Email; lead: Lead | nu
               <Label>Subject</Label>
               <Textarea
                 value={editedSubject}
-                onChange={(e) => setEditedSubject(e.target.value)}
+                onChange={e => setEditedSubject(e.target.value)}
                 rows={2}
               />
             </div>
@@ -149,7 +157,7 @@ export function EmailReviewCard({ email, lead }: { email: Email; lead: Lead | nu
               <Label>Body</Label>
               <Textarea
                 value={editedBody}
-                onChange={(e) => setEditedBody(e.target.value)}
+                onChange={e => setEditedBody(e.target.value)}
                 rows={10}
               />
             </div>
@@ -194,9 +202,7 @@ export function EmailReviewCard({ email, lead }: { email: Email; lead: Lead | nu
                 <Button variant="outline" onClick={() => setIsEditing(true)}>
                   Edit
                 </Button>
-                <Button variant="outline">
-                  Schedule
-                </Button>
+                <Button variant="outline">Schedule</Button>
               </div>
             )}
           </>
@@ -205,7 +211,3 @@ export function EmailReviewCard({ email, lead }: { email: Email; lead: Lead | nu
     </Card>
   );
 }
-
-
-
-

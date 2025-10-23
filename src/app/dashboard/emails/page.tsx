@@ -4,7 +4,13 @@ import { db } from "@/db";
 import { users, emails, leads } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { EmailReviewCard } from "@/components/emails/email-review-card";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default async function EmailsPage() {
@@ -35,10 +41,10 @@ export default async function EmailsPage() {
 
   // Filter emails by status
   const pendingEmails = allEmails.filter(
-    (e) => e.email.status === "draft" || e.email.status === "pending_review"
+    e => e.email.status === "draft" || e.email.status === "pending_review"
   );
-  const scheduledEmails = allEmails.filter((e) => e.email.status === "scheduled");
-  const sentEmails = allEmails.filter((e) => e.email.status === "sent");
+  const scheduledEmails = allEmails.filter(e => e.email.status === "scheduled");
+  const sentEmails = allEmails.filter(e => e.email.status === "sent");
 
   return (
     <div className="space-y-8">
@@ -106,9 +112,7 @@ export default async function EmailsPage() {
           <TabsTrigger value="scheduled">
             Scheduled ({scheduledEmails.length})
           </TabsTrigger>
-          <TabsTrigger value="sent">
-            Sent ({sentEmails.length})
-          </TabsTrigger>
+          <TabsTrigger value="sent">Sent ({sentEmails.length})</TabsTrigger>
         </TabsList>
 
         {/* Pending Emails */}
@@ -159,7 +163,3 @@ export default async function EmailsPage() {
     </div>
   );
 }
-
-
-
-

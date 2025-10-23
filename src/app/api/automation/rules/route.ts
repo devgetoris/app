@@ -10,10 +10,7 @@ export async function GET(request: NextRequest) {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const user = await db.query.users.findFirst({
@@ -21,10 +18,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const rules = await db.query.automationRules.findMany({
@@ -51,10 +45,7 @@ export async function POST(request: NextRequest) {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const user = await db.query.users.findFirst({
@@ -62,24 +53,24 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const body = await request.json();
     const { name, description, conditions, action, priority, isActive } = body;
 
-    const [newRule] = await db.insert(automationRules).values({
-      userId: user.id,
-      name,
-      description,
-      conditions,
-      action,
-      priority: priority || 0,
-      isActive: isActive !== undefined ? isActive : true,
-    }).returning();
+    const [newRule] = await db
+      .insert(automationRules)
+      .values({
+        userId: user.id,
+        name,
+        description,
+        conditions,
+        action,
+        priority: priority || 0,
+        isActive: isActive !== undefined ? isActive : true,
+      })
+      .returning();
 
     return NextResponse.json({
       success: true,
@@ -100,14 +91,19 @@ export async function PUT(request: NextRequest) {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
-    const { ruleId, name, description, conditions, action, priority, isActive } = body;
+    const {
+      ruleId,
+      name,
+      description,
+      conditions,
+      action,
+      priority,
+      isActive,
+    } = body;
 
     if (!ruleId) {
       return NextResponse.json(
@@ -127,7 +123,8 @@ export async function PUT(request: NextRequest) {
     if (priority !== undefined) updateData.priority = priority;
     if (isActive !== undefined) updateData.isActive = isActive;
 
-    await db.update(automationRules)
+    await db
+      .update(automationRules)
       .set(updateData)
       .where(eq(automationRules.id, ruleId));
 
@@ -150,10 +147,7 @@ export async function DELETE(request: NextRequest) {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -166,8 +160,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await db.delete(automationRules)
-      .where(eq(automationRules.id, ruleId));
+    await db.delete(automationRules).where(eq(automationRules.id, ruleId));
 
     return NextResponse.json({
       success: true,

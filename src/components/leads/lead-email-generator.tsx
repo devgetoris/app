@@ -1,11 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 
 interface LeadEmailGeneratorProps {
@@ -45,7 +57,7 @@ export function LeadEmailGenerator({ leadId }: LeadEmailGeneratorProps) {
       }
 
       const data = await response.json();
-      
+
       setGeneratedEmail({
         subject: data.email.subject,
         body: data.email.body,
@@ -87,17 +99,23 @@ export function LeadEmailGenerator({ leadId }: LeadEmailGeneratorProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="customPrompt">Additional Instructions (Optional)</Label>
+            <Label htmlFor="customPrompt">
+              Additional Instructions (Optional)
+            </Label>
             <Textarea
               id="customPrompt"
               value={customPrompt}
-              onChange={(e) => setCustomPrompt(e.target.value)}
+              onChange={e => setCustomPrompt(e.target.value)}
               placeholder="Any specific points you want to mention or focus on..."
               rows={3}
             />
           </div>
 
-          <Button onClick={handleGenerate} disabled={loading} className="w-full">
+          <Button
+            onClick={handleGenerate}
+            disabled={loading}
+            className="w-full"
+          >
             {loading ? "Generating..." : "Generate Email"}
           </Button>
         </CardContent>
@@ -122,7 +140,9 @@ export function LeadEmailGenerator({ leadId }: LeadEmailGeneratorProps) {
             <div className="space-y-2">
               <Label>Body</Label>
               <div className="p-4 bg-muted rounded-md">
-                <p className="text-sm whitespace-pre-wrap">{generatedEmail.body}</p>
+                <p className="text-sm whitespace-pre-wrap">
+                  {generatedEmail.body}
+                </p>
               </div>
             </div>
 
@@ -130,9 +150,7 @@ export function LeadEmailGenerator({ leadId }: LeadEmailGeneratorProps) {
               <Button variant="outline" onClick={handleGenerate}>
                 Regenerate
               </Button>
-              <Button>
-                Review & Send
-              </Button>
+              <Button>Review & Send</Button>
             </div>
           </CardContent>
         </Card>

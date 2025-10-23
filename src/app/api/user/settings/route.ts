@@ -9,19 +9,11 @@ export async function POST(request: NextRequest) {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
-    const {
-      companyName,
-      industry,
-      preferredTone,
-      emailSignature,
-    } = body;
+    const { companyName, industry, preferredTone, emailSignature } = body;
 
     // Get user from database
     const user = await db.query.users.findFirst({
@@ -29,14 +21,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Update user settings
-    await db.update(users)
+    await db
+      .update(users)
       .set({
         companyName,
         industry,

@@ -1,12 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 
 export default function SettingsPage() {
@@ -14,7 +26,11 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState({
     companyName: "",
     industry: "",
-    preferredTone: "professional" as "professional" | "casual" | "friendly" | "formal",
+    preferredTone: "professional" as
+      | "professional"
+      | "casual"
+      | "friendly"
+      | "formal",
     emailSignature: "",
   });
 
@@ -57,9 +73,7 @@ export default function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Business Information</CardTitle>
-          <CardDescription>
-            Update your company details
-          </CardDescription>
+          <CardDescription>Update your company details</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -67,7 +81,9 @@ export default function SettingsPage() {
             <Input
               id="companyName"
               value={settings.companyName}
-              onChange={(e) => setSettings({ ...settings, companyName: e.target.value })}
+              onChange={e =>
+                setSettings({ ...settings, companyName: e.target.value })
+              }
               placeholder="Acme Inc."
             />
           </div>
@@ -77,7 +93,9 @@ export default function SettingsPage() {
             <Input
               id="industry"
               value={settings.industry}
-              onChange={(e) => setSettings({ ...settings, industry: e.target.value })}
+              onChange={e =>
+                setSettings({ ...settings, industry: e.target.value })
+              }
               placeholder="Technology"
             />
           </div>
@@ -97,7 +115,9 @@ export default function SettingsPage() {
             <Label htmlFor="preferredTone">Default Email Tone</Label>
             <Select
               value={settings.preferredTone}
-              onValueChange={(value: any) => setSettings({ ...settings, preferredTone: value })}
+              onValueChange={(value: any) =>
+                setSettings({ ...settings, preferredTone: value })
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select tone" />
@@ -116,7 +136,9 @@ export default function SettingsPage() {
             <Textarea
               id="emailSignature"
               value={settings.emailSignature}
-              onChange={(e) => setSettings({ ...settings, emailSignature: e.target.value })}
+              onChange={e =>
+                setSettings({ ...settings, emailSignature: e.target.value })
+              }
               placeholder="Best regards,&#10;Your Name&#10;Company Name"
               rows={4}
             />

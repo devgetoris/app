@@ -93,20 +93,20 @@ export default function SignUpPage() {
               type="text"
               placeholder="Enter 6-digit code"
               value={code}
-              onChange={(e) => setCode(e.target.value)}
+              onChange={e => setCode(e.target.value)}
               required
               maxLength={6}
             />
           </div>
-          
+
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Verifying..." : "Verify Email"}
           </Button>
         </form>
 
         <div className="text-center">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             onClick={() => {
               setVerifying(false);
               setCode("");
@@ -140,11 +140,11 @@ export default function SignUpPage() {
               type="email"
               placeholder="name@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               required
             />
           </div>
-          
+
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Creating account..." : "Sign Up with Email"}
           </Button>
@@ -193,11 +193,17 @@ export default function SignUpPage() {
         {/* Terms */}
         <p className="text-xs text-muted-foreground text-center">
           By clicking continue, you agree to our{" "}
-          <Link href="/terms" className="underline underline-offset-4 hover:text-primary">
+          <Link
+            href="/terms"
+            className="underline underline-offset-4 hover:text-primary"
+          >
             Terms of Service
           </Link>{" "}
           and{" "}
-          <Link href="/privacy" className="underline underline-offset-4 hover:text-primary">
+          <Link
+            href="/privacy"
+            className="underline underline-offset-4 hover:text-primary"
+          >
             Privacy Policy
           </Link>
           .
@@ -206,4 +212,3 @@ export default function SignUpPage() {
     </>
   );
 }
-

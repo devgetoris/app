@@ -3,7 +3,13 @@ import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { leads } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,7 +17,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { LeadEmailGenerator } from "@/components/leads/lead-email-generator";
 
-export default async function LeadDetailPage({ params }: { params: { id: string } }) {
+export default async function LeadDetailPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   const { userId } = await auth();
 
   if (!userId) {
@@ -46,7 +56,7 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
           <div className="flex items-start gap-6">
             <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 flex-shrink-0">
               {lead.profilePhoto ? (
-                <img
+                <Image
                   src={lead.profilePhoto}
                   alt={fullName}
                   fill
@@ -54,7 +64,8 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-3xl font-semibold">
-                  {lead.firstName?.[0]}{lead.lastName?.[0]}
+                  {lead.firstName?.[0]}
+                  {lead.lastName?.[0]}
                 </div>
               )}
             </div>
@@ -70,7 +81,9 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
 
               <div className="flex items-center gap-2 mt-4">
                 <Badge>{lead.status || "new"}</Badge>
-                {lead.seniority && <Badge variant="outline">{lead.seniority}</Badge>}
+                {lead.seniority && (
+                  <Badge variant="outline">{lead.seniority}</Badge>
+                )}
                 {lead.fitScore && (
                   <Badge variant="secondary">Fit Score: {lead.fitScore}</Badge>
                 )}
@@ -78,18 +91,32 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
 
               <div className="flex gap-3 mt-4">
                 {lead.linkedinUrl && (
-                  <a href={lead.linkedinUrl} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" size="sm">LinkedIn</Button>
+                  <a
+                    href={lead.linkedinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="outline" size="sm">
+                      LinkedIn
+                    </Button>
                   </a>
                 )}
                 {lead.twitterUrl && (
-                  <a href={lead.twitterUrl} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" size="sm">Twitter</Button>
+                  <a
+                    href={lead.twitterUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="outline" size="sm">
+                      Twitter
+                    </Button>
                   </a>
                 )}
                 {lead.email && (
                   <a href={`mailto:${lead.email}`}>
-                    <Button variant="outline" size="sm">Email</Button>
+                    <Button variant="outline" size="sm">
+                      Email
+                    </Button>
                   </a>
                 )}
               </div>
@@ -116,19 +143,25 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
             <CardContent className="space-y-3">
               {lead.email && (
                 <div>
-                  <span className="text-sm font-medium text-muted-foreground">Email:</span>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Email:
+                  </span>
                   <p className="text-sm">{lead.email}</p>
                 </div>
               )}
               {lead.phone && (
                 <div>
-                  <span className="text-sm font-medium text-muted-foreground">Phone:</span>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Phone:
+                  </span>
                   <p className="text-sm">{lead.phone}</p>
                 </div>
               )}
               {lead.companyCity && (
                 <div>
-                  <span className="text-sm font-medium text-muted-foreground">Location:</span>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Location:
+                  </span>
                   <p className="text-sm">
                     {[lead.companyCity, lead.companyState, lead.companyCountry]
                       .filter(Boolean)
@@ -158,7 +191,9 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
               <CardContent>
                 <div className="flex flex-wrap gap-2">
                   {lead.departments.map((dept, index) => (
-                    <Badge key={index} variant="outline">{dept}</Badge>
+                    <Badge key={index} variant="outline">
+                      {dept}
+                    </Badge>
                   ))}
                 </div>
               </CardContent>
@@ -229,37 +264,49 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
             <CardContent className="space-y-3">
               {lead.companyName && (
                 <div>
-                  <span className="text-sm font-medium text-muted-foreground">Name:</span>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Name:
+                  </span>
                   <p className="text-sm">{lead.companyName}</p>
                 </div>
               )}
               {lead.companyIndustry && (
                 <div>
-                  <span className="text-sm font-medium text-muted-foreground">Industry:</span>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Industry:
+                  </span>
                   <p className="text-sm">{lead.companyIndustry}</p>
                 </div>
               )}
               {lead.companySize && (
                 <div>
-                  <span className="text-sm font-medium text-muted-foreground">Size:</span>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Size:
+                  </span>
                   <p className="text-sm">{lead.companySize} employees</p>
                 </div>
               )}
               {lead.companyRevenue && (
                 <div>
-                  <span className="text-sm font-medium text-muted-foreground">Revenue:</span>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Revenue:
+                  </span>
                   <p className="text-sm">{lead.companyRevenue}</p>
                 </div>
               )}
               {lead.companyLocation && (
                 <div>
-                  <span className="text-sm font-medium text-muted-foreground">Location:</span>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Location:
+                  </span>
                   <p className="text-sm">{lead.companyLocation}</p>
                 </div>
               )}
               {lead.companyDomain && (
                 <div>
-                  <span className="text-sm font-medium text-muted-foreground">Website:</span>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Website:
+                  </span>
                   <a
                     href={`https://${lead.companyDomain}`}
                     target="_blank"
@@ -281,7 +328,9 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
               <CardContent>
                 <div className="flex flex-wrap gap-2">
                   {lead.companyTechnologies.map((tech, index) => (
-                    <Badge key={index} variant="secondary">{tech}</Badge>
+                    <Badge key={index} variant="secondary">
+                      {tech}
+                    </Badge>
                   ))}
                 </div>
               </CardContent>
@@ -297,5 +346,3 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
     </div>
   );
 }
-
-

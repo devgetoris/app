@@ -1,4 +1,4 @@
-import { Resend } from 'resend';
+import { Resend } from "resend";
 
 export interface SendEmailParams {
   to: string;
@@ -36,7 +36,7 @@ class ResendService {
         subject: params.subject,
         html: params.html,
         text: params.text,
-        reply_to: params.replyTo,
+        replyTo: params.replyTo,
       });
 
       if (error) {
@@ -44,7 +44,7 @@ class ResendService {
       }
 
       if (!data) {
-        throw new Error('No data received from Resend');
+        throw new Error("No data received from Resend");
       }
 
       return data as SendEmailResponse;
@@ -59,15 +59,18 @@ class ResendService {
   /**
    * Send batch emails
    */
-  async sendBatchEmails(emails: SendEmailParams[]): Promise<SendEmailResponse[]> {
+  async sendBatchEmails(
+    emails: SendEmailParams[]
+  ): Promise<SendEmailResponse[]> {
     try {
       const results = await Promise.allSettled(
         emails.map(email => this.sendEmail(email))
       );
 
       return results
-        .filter((result): result is PromiseFulfilledResult<SendEmailResponse> => 
-          result.status === 'fulfilled'
+        .filter(
+          (result): result is PromiseFulfilledResult<SendEmailResponse> =>
+            result.status === "fulfilled"
         )
         .map(result => result.value);
     } catch (error) {
@@ -104,18 +107,16 @@ let resendService: ResendService | null = null;
 
 export function getResendService(): ResendService {
   if (!process.env.RESEND_API_KEY) {
-    throw new Error('RESEND_API_KEY environment variable is not set');
+    throw new Error("RESEND_API_KEY environment variable is not set");
   }
 
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-  
+  const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+
   if (!resendService) {
     resendService = new ResendService(process.env.RESEND_API_KEY, fromEmail);
   }
-  
+
   return resendService;
 }
 
 export default ResendService;
-
-

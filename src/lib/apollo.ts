@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance } from "axios";
 
 export interface ApolloSearchParams {
   // Basic search
@@ -125,7 +125,7 @@ export interface ApolloContact {
   twitter_url?: string;
   facebook_url?: string;
   github_url?: string;
-  
+
   // Employment
   employment_history?: Array<{
     _id: string;
@@ -147,7 +147,7 @@ export interface ApolloContact {
     id: string;
     key: string;
   }>;
-  
+
   // Organization
   organization?: {
     id: string;
@@ -200,18 +200,18 @@ export interface ApolloContact {
       category: string;
     }>;
   };
-  
+
   // Additional fields
   seniority: string;
   departments: string[];
   subdepartments: string[];
   functions: string[];
-  
+
   // Contact info
   city: string;
   state: string;
   country: string;
-  
+
   // Education
   education?: Array<{
     _id: string;
@@ -274,11 +274,11 @@ class ApolloClient {
   constructor(apiKey: string) {
     this.apiKey = apiKey;
     this.client = axios.create({
-      baseURL: 'https://api.apollo.io/v1',
+      baseURL: "https://api.apollo.io/v1",
       headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
-        'X-Api-Key': apiKey,
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
+        "X-Api-Key": apiKey,
       },
     });
   }
@@ -286,7 +286,9 @@ class ApolloClient {
   /**
    * Search for contacts based on criteria
    */
-  async searchContacts(params: ApolloSearchParams): Promise<ApolloSearchResponse> {
+  async searchContacts(
+    params: ApolloSearchParams
+  ): Promise<ApolloSearchResponse> {
     try {
       console.log("🔍 Apollo Search - Input params:", JSON.stringify(params, null, 2));
       
@@ -381,7 +383,7 @@ class ApolloClient {
       contacts.forEach((contact, idx) => {
         console.log(`  Contact ${idx + 1}: ${contact.first_name} ${contact.last_name} - Email: ${contact.email || 'NO EMAIL'}`);
       });
-      
+
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -447,9 +449,10 @@ class ApolloClient {
           data: error.response?.data,
           email: email,
         });
-        const errorMessage = error.response?.data?.message || 
-                           error.response?.data?.error || 
-                           error.message;
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message;
         throw new Error(`Apollo API error: ${errorMessage}`);
       }
       console.error("❌ Apollo Enrich - Unexpected error:", error);
@@ -489,9 +492,10 @@ class ApolloClient {
           request_url: error.config?.url,
           request_method: error.config?.method,
         });
-        const errorMessage = error.response?.data?.message || 
-                           error.response?.data?.error || 
-                           error.message;
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message;
         throw new Error(`Apollo API error: ${errorMessage}`);
       }
       console.error("❌ Apollo Enrich by ID - Unexpected error:", error);
@@ -754,16 +758,14 @@ let apolloClient: ApolloClient | null = null;
 
 export function getApolloClient(): ApolloClient {
   if (!process.env.APOLLO_API_KEY) {
-    throw new Error('APOLLO_API_KEY environment variable is not set');
+    throw new Error("APOLLO_API_KEY environment variable is not set");
   }
-  
+
   if (!apolloClient) {
     apolloClient = new ApolloClient(process.env.APOLLO_API_KEY);
   }
-  
+
   return apolloClient;
 }
 
 export default ApolloClient;
-
-
