@@ -156,10 +156,7 @@ export default async function CampaignsPage() {
     </div>
   );
 }
-<<<<<<< HEAD
-=======
 
 
 
 
->>>>>>> 262fcb9 (somewhat working)

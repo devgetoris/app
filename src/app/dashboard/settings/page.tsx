@@ -179,10 +179,7 @@ export default function SettingsPage() {
     </div>
   );
 }
-<<<<<<< HEAD
-=======
 
 
 
 
->>>>>>> 262fcb9 (somewhat working)
