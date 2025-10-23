@@ -1,12 +1,26 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { db } from "@/db";
-import { users } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { AppSidebar } from "@/components/app-sidebar";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { UserButton } from "@clerk/nextjs";
+import Link from "next/link";
 import {
+  LayoutDashboard,
+  Users,
+  Mail,
+  Zap,
+  Settings,
+  BarChart3,
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
   SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
@@ -22,28 +36,87 @@ export default async function DashboardLayout({
     redirect("/sign-in");
   }
 
-  // Check if user has completed onboarding
-  const user = await db.query.users.findFirst({
-    where: eq(users.clerkId, userId),
-  });
-
-  if (!user || !user.onboardingCompleted) {
-    redirect("/onboarding");
-  }
+  const menuItems = [
+    {
+      title: "Dashboard",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      title: "Leads",
+      href: "/dashboard/leads",
+      icon: Users,
+    },
+    {
+      title: "Emails",
+      href: "/dashboard/emails",
+      icon: Mail,
+    },
+    {
+      title: "Campaigns",
+      href: "/dashboard/campaigns",
+      icon: BarChart3,
+    },
+    {
+      title: "Automation",
+      href: "/dashboard/automation",
+      icon: Zap,
+    },
+    {
+      title: "Settings",
+      href: "/dashboard/settings",
+      icon: Settings,
+    },
+  ];
 
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <Sidebar className="border-r">
+        <SidebarHeader className="px-4 py-6">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-sm">L</span>
+            </div>
+            <span className="text-lg font-bold">LeadFlow</span>
+          </Link>
+        </SidebarHeader>
+
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {menuItems.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton asChild>
+                      <Link href={item.href} className="flex items-center gap-2">
+                        <item.icon className="w-4 h-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+      </Sidebar>
+
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
+        <header className="flex h-16 items-center justify-between border-b bg-background px-6 sticky top-0 z-40">
+          <div className="flex items-center gap-4">
+            <SidebarTrigger />
           </div>
-          <div className="ml-auto px-4">
-            <ThemeToggle />
+          <div className="flex items-center gap-4">
+            <UserButton afterSignOutUrl="/" />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
+
+        <main className="flex-1 overflow-y-auto">
+          <div className="container mx-auto px-6 py-8">
+            {children}
+          </div>
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );

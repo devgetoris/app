@@ -24,7 +24,7 @@ export default async function LeadsPage() {
   });
 
   if (!user) {
-    redirect("/onboarding");
+    redirect("/sign-in");
   }
 
   // Get all leads for this user
@@ -74,3 +74,10 @@ export default async function LeadsPage() {
     </div>
   );
 }
+<<<<<<< HEAD
+=======
+
+
+
+
+>>>>>>> 262fcb9 (somewhat working)

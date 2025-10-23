@@ -282,3 +282,10 @@ export default function AutomationPage() {
     </div>
   );
 }
+<<<<<<< HEAD
+=======
+
+
+
+
+>>>>>>> 262fcb9 (somewhat working)
