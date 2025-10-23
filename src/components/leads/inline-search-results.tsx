@@ -62,7 +62,6 @@ interface SearchResult {
     secondary_industries?: string[];
     retail_location_count?: number;
   };
-  apolloData?: any;
 }
 
 interface InlineSearchResultsProps {
@@ -348,7 +347,7 @@ export function InlineSearchResults({
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => window.open(result.apolloData.linkedin_url, '_blank')}
+                            onClick={() => window.open(result.apolloData?.linkedin_url, '_blank')}
                             className="text-xs h-6 px-2"
                           >
                             <Linkedin className="w-3 h-3 mr-1" />
@@ -359,7 +358,7 @@ export function InlineSearchResults({
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => window.open(result.apolloData.twitter_url, '_blank')}
+                            onClick={() => window.open(result.apolloData?.twitter_url, '_blank')}
                             className="text-xs h-6 px-2"
                           >
                             <Twitter className="w-3 h-3 mr-1" />
@@ -370,7 +369,7 @@ export function InlineSearchResults({
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => window.open(result.apolloData.facebook_url, '_blank')}
+                            onClick={() => window.open(result.apolloData?.facebook_url, '_blank')}
                             className="text-xs h-6 px-2"
                           >
                             <Facebook className="w-3 h-3 mr-1" />
