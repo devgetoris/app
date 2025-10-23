@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   title: "OrisAI - AI-Powered Lead Generation",
   description:
     "Find leads, generate personalized emails, and grow your business with AI",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -32,8 +35,8 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-          {children}
-          <Toaster />
+            {children}
+            <Toaster />
           </ThemeProvider>
         </body>
       </html>
