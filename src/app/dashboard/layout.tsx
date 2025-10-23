@@ -1,4 +1,3 @@
-
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
@@ -36,8 +35,7 @@ export default async function DashboardLayout({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-8">
               <Link href="/dashboard" className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-primary rounded-lg" />
-                <span className="text-xl font-bold">LeadFlow</span>
+                <span className="text-xl font-bold">OrisAI</span>
               </Link>
 
               <nav className="hidden md:flex items-center gap-6">
@@ -70,10 +68,7 @@ export default async function DashboardLayout({
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {children}
-      </main>
+      <main className="container mx-auto px-4 py-8">{children}</main>
     </div>
   );
 }
-
