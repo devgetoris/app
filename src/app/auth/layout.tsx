@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { OrisAILogo } from "@/components/orisai-logo";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -53,14 +54,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 
         {/* Logo - Top Left */}
         <div className="absolute top-12 left-12 z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">
-                O
-              </span>
-            </div>
-            <span className="text-2xl font-bold text-primary">OrisAI</span>
-          </div>
+          <OrisAILogo />
         </div>
 
         {/* Testimonial - Bottom Left */}
