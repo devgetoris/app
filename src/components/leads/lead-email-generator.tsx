@@ -158,10 +158,7 @@ export function LeadEmailGenerator({ leadId }: LeadEmailGeneratorProps) {
     </div>
   );
 }
-<<<<<<< HEAD
-=======
 
 
 
 
->>>>>>> 262fcb9 (somewhat working)
