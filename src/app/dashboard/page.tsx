@@ -8,13 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -141,9 +134,6 @@ export default function DashboardPage() {
   const [selectedCompanySizes, setSelectedCompanySizes] = useState<string[]>(
     []
   );
-  const [selectedCompanySizes, setSelectedCompanySizes] = useState<string[]>(
-    []
-  );
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [aiQuery, setAiQuery] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -160,7 +150,6 @@ export default function DashboardPage() {
 
   const handleSearch = async () => {
     // Validate that at least one search criterion is provided
-    const hasAnyCriteria =
     const hasAnyCriteria =
       keywords.trim() ||
       selectedJobTitles.length > 0 ||
@@ -397,8 +386,6 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground mt-2">
-          Welcome back! Start by searching for leads or manage your existing
-          campaigns.
           Welcome back! Start by searching for leads or manage your existing
           campaigns.
         </p>
@@ -692,12 +679,8 @@ export default function DashboardPage() {
         <CardHeader>
           <CardTitle>Recent Activity</CardTitle>
           <CardDescription>Your latest actions and updates</CardDescription>
-          <CardDescription>Your latest actions and updates</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            No recent activity yet. Start by searching for leads!
-          </p>
           <p className="text-sm text-muted-foreground">
             No recent activity yet. Start by searching for leads!
           </p>
