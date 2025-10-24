@@ -11,6 +11,7 @@ import {
   Settings,
   Zap,
   Rocket,
+  Search,
 } from "lucide-react";
 
 import {
@@ -36,6 +37,11 @@ const data = {
       title: "Dashboard",
       url: "/dashboard",
       icon: LayoutDashboard,
+    },
+    {
+      title: "Find Leads",
+      url: "/dashboard/search",
+      icon: Search,
     },
     {
       title: "Leads",
