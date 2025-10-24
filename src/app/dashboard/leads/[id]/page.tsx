@@ -20,7 +20,7 @@ import { LeadEmailGenerator } from "@/components/leads/lead-email-generator";
 export default async function LeadDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const { userId } = await auth();
 
@@ -28,9 +28,11 @@ export default async function LeadDetailPage({
     redirect("/sign-in");
   }
 
+  const { id } = await params;
+
   // Get lead
   const lead = await db.query.leads.findFirst({
-    where: eq(leads.id, params.id),
+    where: eq(leads.id, id),
   });
 
   if (!lead) {

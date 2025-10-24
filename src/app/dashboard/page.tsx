@@ -666,7 +666,6 @@ export default function DashboardPage() {
           <CardContent>
             <InlineSearchResults
               results={searchResults}
-              searchType={searchType}
               onImportSelected={handleImportSelected}
               loading={loading}
             />
