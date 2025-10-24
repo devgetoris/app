@@ -1,0 +1,1 @@
+ALTER TABLE "leads" ADD COLUMN "record_type" varchar(20) DEFAULT 'individual';

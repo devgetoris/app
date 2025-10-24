@@ -40,17 +40,31 @@ export async function POST(request: NextRequest) {
     const importedLeads = [];
 
     for (const result of selectedResults) {
+      // Validate required fields
+      if (!result.apolloId && !result.id) {
+        console.log(`⚠️ Skipping result without valid ID:`, result);
+        continue;
+      }
+
+      const apolloId = result.apolloId || result.id;
+      
       // Check if lead already exists for this user
       const existingLead = await db.query.leads.findFirst({
-        where: eq(leads.apolloId, result.apolloId),
+        where: eq(leads.apolloId, apolloId),
       });
 
       if (!existingLead) {
-        console.log(`💾 Importing lead: ${result.firstName} ${result.lastName} (ID: ${result.apolloId})`);
+        const recordType = searchType === "organizations" ? "organization" : "individual";
+        const displayName = searchType === "organizations" 
+          ? result.name || result.companyName 
+          : `${result.firstName || ''} ${result.lastName || ''}`.trim();
+        
+        console.log(`💾 Importing ${recordType}: ${displayName} (ID: ${apolloId})`);
         
         const [newLead] = await db.insert(leads).values({
           userId: user.id,
-          apolloId: result.apolloId,
+          recordType: recordType,
+          apolloId: apolloId,
           firstName: result.firstName,
           lastName: result.lastName,
           email: result.email,
@@ -59,18 +73,20 @@ export async function POST(request: NextRequest) {
           seniority: result.seniority,
           departments: result.departments,
           
-          // Company info
-          companyName: result.companyName,
-          companyDomain: result.companyDomain,
-          companyIndustry: result.companyIndustry,
-          companySize: result.companySize,
-          companyRevenue: result.companyRevenue,
-          companyLocation: result.companyLocation,
-          companyCity: result.companyCity,
-          companyState: result.companyState,
-          companyCountry: result.companyCountry,
-          companyFunding: result.companyFunding,
-          companyTechnologies: result.companyTechnologies,
+          // Company info - handle both individual and organization records
+          companyName: searchType === "organizations" ? result.name : result.companyName,
+          companyDomain: searchType === "organizations" ? result.domain : result.companyDomain,
+          companyIndustry: searchType === "organizations" ? result.industry : result.companyIndustry,
+          companySize: searchType === "organizations" ? (result.employeeCount ? String(result.employeeCount) : null) : result.companySize,
+          companyRevenue: searchType === "organizations" ? result.revenue : result.companyRevenue,
+          companyLocation: searchType === "organizations" ? 
+            `${result.location?.city || ''}, ${result.location?.state || ''}, ${result.location?.country || ''}`.replace(/^,\s*|,\s*$/g, '') : 
+            result.companyLocation,
+          companyCity: searchType === "organizations" ? result.location?.city : result.companyCity,
+          companyState: searchType === "organizations" ? result.location?.state : result.companyState,
+          companyCountry: searchType === "organizations" ? result.location?.country : result.companyCountry,
+          companyFunding: searchType === "organizations" ? result.publiclyTraded : result.companyFunding,
+          companyTechnologies: searchType === "organizations" ? result.technologies : result.companyTechnologies,
           
           // Social profiles
           linkedinUrl: result.linkedinUrl,
@@ -85,7 +101,7 @@ export async function POST(request: NextRequest) {
           education: result.education,
           
           // Store full Apollo data for reference
-          apolloData: result.apolloData,
+          apolloData: result.apolloData || result,
           
           // Initial status
           status: "new",
@@ -93,7 +109,10 @@ export async function POST(request: NextRequest) {
 
         importedLeads.push(newLead);
       } else {
-        console.log(`ℹ️ Lead already exists: ${result.firstName} ${result.lastName}`);
+        const displayName = searchType === "organizations" 
+          ? result.name || result.companyName 
+          : `${result.firstName || ''} ${result.lastName || ''}`.trim();
+        console.log(`ℹ️ Lead already exists: ${displayName}`);
         importedLeads.push(existingLead);
       }
     }

@@ -12,16 +12,28 @@ import { useRouter } from "next/navigation";
 
 interface SearchResult {
   id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  title: string;
-  companyName: string;
-  companyDomain: string;
-  linkedinUrl: string;
-  profilePhoto: string;
-  bio: string;
-  apolloId: string;
+  apolloId?: string;
+  recordType?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  title?: string;
+  companyName?: string;
+  companyDomain?: string;
+  linkedinUrl?: string;
+  profilePhoto?: string;
+  bio?: string;
+  // Organization-specific fields
+  name?: string;
+  industry?: string;
+  employeeCount?: number;
+  location?: {
+    city?: string;
+    state?: string;
+    country?: string;
+  };
+  website?: string;
+  domain?: string;
 }
 
 interface SearchResultsModalProps {
@@ -164,83 +176,125 @@ export function SearchResultsModal({
               </div>
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredResults.map((result) => (
-                  <Card key={result.id} className="relative">
-                    <div className="absolute top-2 left-2">
-                      <Checkbox
-                        checked={selectedIds.includes(result.id)}
-                        onCheckedChange={() => handleSelectOne(result.id)}
-                      />
-                    </div>
-                    
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start gap-3">
-                        {result.profilePhoto && (
-                          <img
-                            src={result.profilePhoto}
-                            alt={`${result.firstName} ${result.lastName}`}
-                            className="w-12 h-12 rounded-full object-cover"
-                          />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <CardTitle className="text-sm font-medium truncate">
-                            {result.firstName} {result.lastName}
-                          </CardTitle>
-                          <CardDescription className="text-xs">
-                            {result.title}
-                          </CardDescription>
+                {filteredResults.map((result) => {
+                  const isOrganization = result.recordType === "organization";
+                  const displayName = isOrganization 
+                    ? result.name || result.companyName || "Organization"
+                    : `${result.firstName || ""} ${result.lastName || ""}`.trim();
+                  
+                  return (
+                    <Card key={result.id} className="relative">
+                      <div className="absolute top-2 left-2">
+                        <Checkbox
+                          checked={selectedIds.includes(result.id)}
+                          onCheckedChange={() => handleSelectOne(result.id)}
+                        />
+                      </div>
+                      
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start gap-3">
+                          <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-lg font-semibold">
+                            {isOrganization 
+                              ? (result.name?.[0] || result.companyName?.[0] || "O")
+                              : (result.firstName?.[0] || "") + (result.lastName?.[0] || "")
+                            }
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <CardTitle className="text-sm font-medium truncate">
+                                {displayName}
+                              </CardTitle>
+                              <Badge variant={isOrganization ? "secondary" : "default"} className="text-xs">
+                                {isOrganization ? "Organization" : "Individual"}
+                              </Badge>
+                            </div>
+                            <CardDescription className="text-xs">
+                              {isOrganization ? result.industry : result.title}
+                            </CardDescription>
+                          </div>
                         </div>
-                      </div>
-                    </CardHeader>
+                      </CardHeader>
 
-                    <CardContent className="pt-0">
-                      <div className="space-y-2">
-                        {result.companyName && (
-                          <div className="text-xs">
-                            <span className="font-medium">Company:</span> {result.companyName}
-                          </div>
-                        )}
-                        
-                        {result.email && result.email !== "email_not_unlocked" && (
-                          <div className="text-xs">
-                            <span className="font-medium">Email:</span> 
-                            <span className="text-green-600 ml-1">{result.email}</span>
-                          </div>
-                        )}
-                        
-                        {result.email === "email_not_unlocked" && (
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="text-xs">
-                              Email Not Unlocked
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              (Apollo credits required)
-                            </span>
-                          </div>
-                        )}
+                      <CardContent className="pt-0">
+                        <div className="space-y-2">
+                          {isOrganization ? (
+                            <>
+                              {result.employeeCount && (
+                                <div className="text-xs">
+                                  <span className="font-medium">Employees:</span> {result.employeeCount.toLocaleString()}
+                                </div>
+                              )}
+                              {result.location && (result.location.city || result.location.state || result.location.country) && (
+                                <div className="text-xs">
+                                  <span className="font-medium">Location:</span> 
+                                  {[result.location.city, result.location.state, result.location.country]
+                                    .filter(Boolean).join(", ")}
+                                </div>
+                              )}
+                              {result.website && (
+                                <div className="text-xs">
+                                  <a
+                                    href={result.website}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:underline"
+                                  >
+                                    Website
+                                  </a>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              {result.companyName && (
+                                <div className="text-xs">
+                                  <span className="font-medium">Company:</span> {result.companyName}
+                                </div>
+                              )}
+                              
+                              {result.email && result.email !== "email_not_unlocked" && (
+                                <div className="text-xs">
+                                  <span className="font-medium">Email:</span> 
+                                  <span className="text-green-600 ml-1">{result.email}</span>
+                                </div>
+                              )}
+                              
+                              {result.email === "email_not_unlocked" && (
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="secondary" className="text-xs">
+                                    Email Not Unlocked
+                                  </Badge>
+                                  <span className="text-xs text-muted-foreground">
+                                    (Apollo credits required)
+                                  </span>
+                                </div>
+                              )}
 
-                        {result.bio && (
-                          <div className="text-xs text-muted-foreground line-clamp-2">
-                            {result.bio}
-                          </div>
-                        )}
+                              {result.bio && (
+                                <div className="text-xs text-muted-foreground line-clamp-2">
+                                  {result.bio}
+                                </div>
+                              )}
 
-                        {result.linkedinUrl && (
-                          <div className="text-xs">
-                            <a
-                              href={result.linkedinUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline"
-                            >
-                              LinkedIn Profile
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                              {result.linkedinUrl && (
+                                <div className="text-xs">
+                                  <a
+                                    href={result.linkedinUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:underline"
+                                  >
+                                    LinkedIn Profile
+                                  </a>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -5,14 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { InlineSearchResults } from "./inline-search-results";
 
 export function LeadsSearchInterface() {
   const [loading, setLoading] = useState(false);
-  const [searchType, setSearchType] = useState<"people" | "organizations">("people");
   const [aiQuery, setAiQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
 
@@ -45,12 +42,8 @@ export function LeadsSearchInterface() {
       const parseData = await parseResponse.json();
       console.log("✅ Parsed query result:", parseData);
 
-      // Then immediately search with the parsed query
-      const endpoint = searchType === "people" 
-        ? "/api/apollo/search" 
-        : "/api/apollo/search-organizations";
-
-      const searchResponse = await fetch(endpoint, {
+      // Then immediately search with the parsed query - try people first, then organizations if no results
+      let searchResponse = await fetch("/api/apollo/search", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -58,37 +51,45 @@ export function LeadsSearchInterface() {
         body: JSON.stringify(parseData.parsed),
       });
 
+      let searchData = await searchResponse.json();
+      
+      // If no people found, try organizations
+      if (!searchData.leads || searchData.leads.length === 0) {
+        console.log("🔍 No people found, trying organizations...");
+        searchResponse = await fetch("/api/apollo/search-organizations", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(parseData.parsed),
+        });
+        searchData = await searchResponse.json();
+      }
+
       if (!searchResponse.ok) {
         const errorData = await searchResponse.json();
         throw new Error(errorData.error || "Failed to search");
       }
-
-      const searchData = await searchResponse.json();
       
       // Debug: Log the search results data
       console.log("🔍 Search results received in leads interface:", searchData);
-      if (searchData.leads && searchData.leads.length > 0) {
-        console.log("📋 Sample lead from search results:", JSON.stringify(searchData.leads[0], null, 2));
-      }
       
-      if (searchType === "people") {
-        if (searchData.leads.length === 0) {
-          toast.warning("No people found. Try these tips: Use broader terms (e.g., 'Engineer' instead of 'Senior Software Engineer'), add location keywords, or try different job titles.", {
-            duration: 8000,
-          });
-        } else {
-          toast.success(`Found ${searchData.leads.length} people!`);
-          setSearchResults(searchData.leads);
-        }
+      // Handle results - check if we have people or organizations
+      const hasPeople = searchData.leads && searchData.leads.length > 0;
+      const hasOrganizations = searchData.organizations && searchData.organizations.length > 0;
+      
+      if (hasPeople) {
+        console.log("📋 Sample person from search results:", JSON.stringify(searchData.leads[0], null, 2));
+        toast.success(`Found ${searchData.leads.length} people!`);
+        setSearchResults(searchData.leads);
+      } else if (hasOrganizations) {
+        console.log("📋 Sample organization from search results:", JSON.stringify(searchData.organizations[0], null, 2));
+        toast.success(`Found ${searchData.organizations.length} organizations!`);
+        setSearchResults(searchData.organizations);
       } else {
-        if (searchData.organizations.length === 0) {
-          toast.warning("No organizations found. Try these tips: Use broader industry terms, add location keywords, or search for specific company types.", {
-            duration: 8000,
-          });
-        } else {
-          toast.success(`Found ${searchData.organizations.length} organizations!`);
-          setSearchResults(searchData.organizations);
-        }
+        toast.warning("No results found. Try these tips: Use broader terms, add location keywords, or try different search terms.", {
+          duration: 8000,
+        });
       }
     } catch (error) {
       console.error("AI search error:", error);
@@ -103,6 +104,9 @@ export function LeadsSearchInterface() {
   const handleImportSelected = async (selectedIds: string[]) => {
     try {
       const selectedResults = searchResults.filter(result => selectedIds.includes(result.id));
+      
+      // Determine search type based on the results
+      const searchType = selectedResults.length > 0 && selectedResults[0].recordType === "organization" ? "organizations" : "people";
       
       const response = await fetch("/api/leads/import", {
         method: "POST",
@@ -121,7 +125,8 @@ export function LeadsSearchInterface() {
       }
 
       const data = await response.json();
-      toast.success(`Successfully imported ${data.imported} ${searchType === "people" ? "people" : "organizations"} to your leads!`);
+      const resultType = searchType === "people" ? "people" : "organizations";
+      toast.success(`Successfully imported ${data.imported} ${resultType} to your leads!`);
       
       // Clear search results after successful import
       setSearchResults([]);
@@ -139,29 +144,10 @@ export function LeadsSearchInterface() {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <CardTitle>Find New {searchType === "people" ? "People" : "Organizations"}</CardTitle>
+              <CardTitle>Find New Leads</CardTitle>
               <CardDescription>
-                Use AI to search for {searchType === "people" ? "people" : "organizations"} in natural language.
+                Use AI to search for people and organizations in natural language.
               </CardDescription>
-            </div>
-            <div className="flex items-center gap-4">
-              {/* Search Type Toggle */}
-              <div className="flex items-center space-x-2">
-                <Label htmlFor="search-type" className="text-sm font-medium">
-                  Organizations
-                </Label>
-                <Switch
-                  id="search-type"
-                  checked={searchType === "people"}
-                  onCheckedChange={(checked) => {
-                    setSearchType(checked ? "people" : "organizations");
-                    setSearchResults([]); // Clear results when switching types
-                  }}
-                />
-                <Label htmlFor="search-type" className="text-sm font-medium">
-                  People
-                </Label>
-              </div>
             </div>
           </div>
         </CardHeader>
@@ -169,25 +155,17 @@ export function LeadsSearchInterface() {
           <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800 mb-6">
             <p className="text-sm text-blue-900 dark:text-blue-100">
               💡 <strong>AI-Powered Search:</strong> Simply describe what you're looking for in natural language. 
-              {searchType === "people" ? (
-                <>Examples: "VP in SF", "CTOs in AI startups", "Product managers in NY tech companies"</>
-              ) : (
-                <>Examples: "Tech companies in SF", "AI startups with 50+ employees", "Companies using React"</>
-              )}
+              Examples: "VP in SF", "CTOs in AI startups", "Product managers in NY tech companies", "Tech companies in SF", "AI startups with 50+ employees", "Companies using React"
             </p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="ai-query">
-              What {searchType === "people" ? "people" : "organizations"} are you looking for?
+              What are you looking for?
             </Label>
             <Input
               id="ai-query"
-              placeholder={
-                searchType === "people" 
-                  ? "e.g., VP in SF, CTOs in AI startups, Product managers in NY"
-                  : "e.g., Tech companies in SF, AI startups with 50+ employees, Companies using React"
-              }
+              placeholder="e.g., VP in SF, CTOs in AI startups, Product managers in NY, Tech companies in SF, AI startups with 50+ employees"
               value={aiQuery}
               onChange={(e) => setAiQuery(e.target.value)}
               onKeyDown={(e) => {
@@ -210,7 +188,7 @@ export function LeadsSearchInterface() {
               size="lg"
               className="flex-1"
             >
-              {loading ? "Searching..." : `Search ${searchType === "people" ? "People" : "Organizations"}`}
+              {loading ? "Searching..." : "Search Leads"}
             </Button>
           </div>
         </CardContent>
@@ -219,7 +197,6 @@ export function LeadsSearchInterface() {
       {/* Search Results */}
       <InlineSearchResults
         results={searchResults}
-        searchType={searchType}
         onImportSelected={handleImportSelected}
         loading={loading}
       />

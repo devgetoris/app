@@ -75,6 +75,9 @@ export const leads = pgTable("leads", {
     .references(() => users.id)
     .notNull(),
 
+  // Record type - individual or organization
+  recordType: varchar("record_type", { length: 20 }).default("individual"), // individual, organization
+
   // Basic contact info
   apolloId: varchar("apollo_id", { length: 255 }).unique(),
   firstName: varchar("first_name", { length: 255 }),

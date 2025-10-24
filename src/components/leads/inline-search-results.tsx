@@ -6,13 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Building2, ExternalLink, Mail, MapPin, Users, Phone, Globe, Linkedin, Twitter, Facebook } from "lucide-react";
 
 interface SearchResult {
   id: string;
+  recordType?: string;
   firstName?: string;
   lastName?: string;
   email?: string;
@@ -66,21 +66,18 @@ interface SearchResult {
 
 interface InlineSearchResultsProps {
   results: SearchResult[];
-  searchType: "people" | "organizations";
   onImportSelected: (selectedIds: string[]) => Promise<void>;
   loading?: boolean;
 }
 
 export function InlineSearchResults({
   results,
-  searchType,
   onImportSelected,
   loading = false,
 }: InlineSearchResultsProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
   const [emailFilter, setEmailFilter] = useState<string>("all");
-  const [viewType, setViewType] = useState<"people" | "organizations">(searchType);
   const router = useRouter();
 
   // Debug: Log the results data
@@ -89,13 +86,18 @@ export function InlineSearchResults({
     console.log("📋 Sample result in InlineSearchResults:", JSON.stringify(results[0], null, 2));
   }
 
-  // Filter results based on email status and view type
+  // Filter results based on email status
   const filteredResults = results.filter(result => {
     if (emailFilter === "all") return true;
     if (emailFilter === "unlocked") return result.email && result.email !== "email_not_unlocked";
     if (emailFilter === "locked") return result.email === "email_not_unlocked";
     return true;
   });
+
+  // Determine if we have people or organizations based on the results
+  const hasPeople = results.some(result => result.recordType === "individual" || (!result.recordType && (result.firstName || result.lastName)));
+  const hasOrganizations = results.some(result => result.recordType === "organization" || (!result.recordType && result.name && !result.firstName && !result.lastName));
+  const resultType = hasPeople ? "people" : "organizations";
 
   const handleSelectAll = () => {
     const filteredIds = filteredResults.map(result => result.id);
@@ -123,7 +125,7 @@ export function InlineSearchResults({
     try {
       setImporting(true);
       await onImportSelected(selectedIds);
-      toast.success(`Successfully imported ${selectedIds.length} ${viewType === "people" ? "people" : "organizations"}`);
+      toast.success(`Successfully imported ${selectedIds.length} ${resultType}`);
       setSelectedIds([]);
       router.push("/dashboard/leads");
     } catch (error) {
@@ -143,25 +145,12 @@ export function InlineSearchResults({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <CardTitle>Search Results ({filteredResults.length} {viewType === "people" ? "people" : "organizations"})</CardTitle>
+            <CardTitle>Search Results ({filteredResults.length} {resultType})</CardTitle>
             <CardDescription>
-              Review and select the {viewType === "people" ? "people" : "organizations"} you want to import to your leads.
+              Review and select the {resultType} you want to import to your leads.
             </CardDescription>
           </div>
           <div className="flex items-center gap-4">
-            {/* View Type Toggle */}
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium">View:</label>
-              <Select value={viewType} onValueChange={(value: "people" | "organizations") => setViewType(value)}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="people">People</SelectItem>
-                  <SelectItem value="organizations">Organizations</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             <Button
               onClick={handleImport}
               disabled={selectedIds.length === 0 || importing}
@@ -187,7 +176,7 @@ export function InlineSearchResults({
               </label>
             </div>
             
-            {viewType === "people" && (
+            {hasPeople && (
               <div className="flex items-center space-x-2">
                 <label className="text-sm font-medium">Filter by email:</label>
                 <Select value={emailFilter} onValueChange={setEmailFilter}>
@@ -207,76 +196,85 @@ export function InlineSearchResults({
 
         {/* Results Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredResults.map((result) => (
-            <Card key={result.id} className="relative">
-              <div className="absolute top-2 left-2">
-                <Checkbox
-                  checked={selectedIds.includes(result.id)}
-                  onCheckedChange={() => handleSelectOne(result.id)}
-                />
-              </div>
-              
-              <CardHeader className="pb-3">
-                <div className="flex items-start gap-3">
-                  {/* Profile photo for people, logo for organizations */}
-                  {viewType === "people" && result.profilePhoto && (
-                    <img
-                      src={result.profilePhoto}
-                      alt={`${result.firstName} ${result.lastName}`}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                  )}
-                  {viewType === "organizations" && result.apolloData?.logo_url && (
-                    <img
-                      src={result.apolloData.logo_url}
-                      alt={result.name}
-                      className="w-12 h-12 rounded-lg object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                      }}
-                    />
-                  )}
-                  {viewType === "organizations" && !result.apolloData?.logo_url && (
-                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <Building2 className="w-6 h-6 text-gray-600" />
-                    </div>
-                  )}
-                  {viewType === "people" && !result.profilePhoto && (
-                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                      <Users className="w-6 h-6 text-gray-600" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-sm font-medium truncate">
-                      {result.firstName && result.lastName 
-                        ? `${result.firstName} ${result.lastName}`
-                        : result.name || "Unknown"
-                      }
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      {result.title || result.industry || "Unknown"}
-                    </CardDescription>
-                    {viewType === "organizations" && result.apolloData?.publicly_traded_symbol && (
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="secondary" className="text-xs">
-                          {result.apolloData.publicly_traded_symbol}
-                        </Badge>
-                        {result.apolloData.publicly_traded_exchange && (
-                          <span className="text-xs text-gray-500">
-                            {result.apolloData.publicly_traded_exchange.toUpperCase()}
-                          </span>
-                        )}
+          {filteredResults.map((result) => {
+            // Automatically detect if this is an organization or individual
+            const isOrganization = result.recordType === "organization" || (!result.recordType && result.name && !result.firstName && !result.lastName);
+            
+            return (
+              <Card key={result.id} className="relative">
+                <div className="absolute top-2 left-2">
+                  <Checkbox
+                    checked={selectedIds.includes(result.id)}
+                    onCheckedChange={() => handleSelectOne(result.id)}
+                  />
+                </div>
+                
+                <CardHeader className="pb-3">
+                  <div className="flex items-start gap-3">
+                    {/* Profile photo for people, logo for organizations */}
+                    {!isOrganization && result.profilePhoto && (
+                      <img
+                        src={result.profilePhoto}
+                        alt={`${result.firstName} ${result.lastName}`}
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                    )}
+                    {isOrganization && result.apolloData?.logo_url && (
+                      <img
+                        src={result.apolloData.logo_url}
+                        alt={result.name}
+                        className="w-12 h-12 rounded-lg object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                    )}
+                    {isOrganization && !result.apolloData?.logo_url && (
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <Building2 className="w-6 h-6 text-gray-600" />
                       </div>
                     )}
+                    {!isOrganization && !result.profilePhoto && (
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                        <Users className="w-6 h-6 text-gray-600" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-sm font-medium truncate">
+                          {!isOrganization && result.firstName && result.lastName 
+                            ? `${result.firstName} ${result.lastName}`
+                            : result.name || result.companyName || "Unknown"
+                          }
+                        </CardTitle>
+                        <Badge variant={isOrganization ? "secondary" : "default"} className="text-xs">
+                          {isOrganization ? "Organization" : "Individual"}
+                        </Badge>
+                      </div>
+                      <CardDescription className="text-xs">
+                        {!isOrganization ? (result.title || "Unknown") : (result.industry || "Unknown")}
+                      </CardDescription>
+                      {isOrganization && result.apolloData?.publicly_traded_symbol && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="secondary" className="text-xs">
+                            {result.apolloData.publicly_traded_symbol}
+                          </Badge>
+                          {result.apolloData.publicly_traded_exchange && (
+                            <span className="text-xs text-gray-500">
+                              {result.apolloData.publicly_traded_exchange.toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </CardHeader>
+                </CardHeader>
 
-              <CardContent className="pt-0">
-                <div className="space-y-2">
-                  {/* Organization-specific data */}
-                  {viewType === "organizations" && result.name && (
+                <CardContent className="pt-0">
+                  <div className="space-y-2">
+                    {/* Organization-specific data */}
+                    {isOrganization && result.name && (
                     <>
                       {result.website && (
                         <div className="text-xs">
@@ -399,8 +397,8 @@ export function InlineSearchResults({
                     </>
                   )}
 
-                  {/* People-specific data */}
-                  {viewType === "people" && (
+                    {/* People-specific data */}
+                    {!isOrganization && (
                     <>
                       {result.companyName && (
                         <div className="text-xs">
@@ -462,11 +460,12 @@ export function InlineSearchResults({
                           .join(", ")
                       }
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </CardContent>
     </Card>

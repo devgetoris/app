@@ -8,6 +8,7 @@ import Link from "next/link";
 
 interface Lead {
   id: string;
+  recordType?: string;
   firstName: string | null;
   lastName: string | null;
   email: string | null;
@@ -23,7 +24,10 @@ interface Lead {
 }
 
 export function LeadCard({ lead }: { lead: Lead }) {
-  const fullName = `${lead.firstName || ""} ${lead.lastName || ""}`.trim();
+  const isOrganization = lead.recordType === "organization";
+  const displayName = isOrganization 
+    ? lead.companyName || "Organization" 
+    : `${lead.firstName || ""} ${lead.lastName || ""}`.trim();
 
   return (
     <Card className="hover:shadow-lg transition-shadow">
@@ -33,24 +37,36 @@ export function LeadCard({ lead }: { lead: Lead }) {
             {lead.profilePhoto ? (
               <img
                 src={lead.profilePhoto}
-                alt={fullName}
-
+                alt={displayName}
                 className="object-cover"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-lg font-semibold">
-                {lead.firstName?.[0]}
-                {lead.lastName?.[0]}
+                {isOrganization 
+                  ? (lead.companyName?.[0] || "O") 
+                  : `${lead.firstName?.[0] || ""}${lead.lastName?.[0] || ""}`}
               </div>
             )}
           </div>
 
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-lg truncate">{fullName}</h3>
-            <p className="text-sm text-muted-foreground truncate">
-              {lead.title}
-            </p>
-            {lead.companyName && (
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-lg truncate">{displayName}</h3>
+              <Badge variant={isOrganization ? "secondary" : "default"} className="text-xs">
+                {isOrganization ? "Organization" : "Individual"}
+              </Badge>
+            </div>
+            {!isOrganization && lead.title && (
+              <p className="text-sm text-muted-foreground truncate">
+                {lead.title}
+              </p>
+            )}
+            {isOrganization && lead.companyIndustry && (
+              <p className="text-sm text-muted-foreground truncate">
+                {lead.companyIndustry}
+              </p>
+            )}
+            {!isOrganization && lead.companyName && (
               <p className="text-sm text-muted-foreground truncate">
                 {lead.companyName}
               </p>

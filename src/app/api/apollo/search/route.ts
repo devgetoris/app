@@ -332,6 +332,7 @@ export async function POST(request: NextRequest) {
             linkedinUrl: enrichedContact.linkedin_url,
             profilePhoto: enrichedContact.photo_url,
             bio: enrichedContact.headline,
+            recordType: "individual",
           });
         } else {
           console.log(`   ℹ️ Lead already exists in database`);
@@ -347,6 +348,7 @@ export async function POST(request: NextRequest) {
             linkedinUrl: enrichedContact.linkedin_url,
             profilePhoto: enrichedContact.photo_url,
             bio: enrichedContact.headline,
+            recordType: "individual",
           });
         }
       }

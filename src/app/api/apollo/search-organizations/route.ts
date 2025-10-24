@@ -212,6 +212,8 @@ export async function POST(request: NextRequest) {
       // Create a lead-like record for the organization
       const organizationRecord = {
         id: org.id,
+        apolloId: org.id,
+        recordType: "organization",
         name: org.name,
         website: org.website_url,
         domain: org.primary_domain,
