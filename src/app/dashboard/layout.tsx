@@ -30,7 +30,7 @@ export default async function DashboardLayout({
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            <UserButton afterSignOutUrl="/" />
+            <UserButton afterSignOutUrl="/auth/sign-in" />
           </div>
         </header>
 
