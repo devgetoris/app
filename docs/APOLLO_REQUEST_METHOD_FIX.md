@@ -2,7 +2,8 @@
 
 ## The Issue
 
-`reveal_personal_emails: true` parameter was being sent as **query parameters in GET requests**, but Apollo API expects it in the **request body via POST requests**.
+`reveal_personal_emails: true` parameter was being sent as **query parameters in GET requests**, but
+Apollo API expects it in the **request body via POST requests**.
 
 ## The Problem
 
@@ -22,7 +23,9 @@ Apollo wasn't revealing emails because it wasn't receiving the parameter in the 
 ## What Was Fixed
 
 ### 1. **`getContactById()` method** (lines 340-372)
+
 **Changed from:**
+
 ```typescript
 const response = await this.client.get<ApolloEnrichResponse>(`/people/${id}`, {
   params: {
@@ -32,6 +35,7 @@ const response = await this.client.get<ApolloEnrichResponse>(`/people/${id}`, {
 ```
 
 **Changed to:**
+
 ```typescript
 const requestBody = {
   reveal_personal_emails: true,
@@ -40,9 +44,11 @@ const response = await this.client.post<ApolloEnrichResponse>(`/people/${id}`, r
 ```
 
 ### 2. **`enrichContact()` method** (lines 303-333)
+
 **Changed from:**
+
 ```typescript
-const response = await this.client.get<ApolloEnrichResponse>('/people/match', {
+const response = await this.client.get<ApolloEnrichResponse>("/people/match", {
   params: {
     email,
     reveal_personal_emails: true,
@@ -51,21 +57,25 @@ const response = await this.client.get<ApolloEnrichResponse>('/people/match', {
 ```
 
 **Changed to:**
+
 ```typescript
 const requestBody = {
   email,
   reveal_personal_emails: true,
 };
-const response = await this.client.post<ApolloEnrichResponse>('/people/match', requestBody);
+const response = await this.client.post<ApolloEnrichResponse>("/people/match", requestBody);
 ```
 
 ## Why This Matters
 
 Apollo API has specific expectations:
-- **GET requests** - Used for fetching data with query parameters
-- **POST requests** - Used for operations that modify or require configuration parameters like `reveal_personal_emails`
 
-The `reveal_personal_emails` parameter is a **configuration parameter**, not a simple filter. It needs to be in the POST request body, not query string.
+- **GET requests** - Used for fetching data with query parameters
+- **POST requests** - Used for operations that modify or require configuration parameters like
+  `reveal_personal_emails`
+
+The `reveal_personal_emails` parameter is a **configuration parameter**, not a simple filter. It
+needs to be in the POST request body, not query string.
 
 ## Expected Result After Fix
 
@@ -99,6 +109,7 @@ Now when you enrich a contact:
 ## Technical Details
 
 Apollo API endpoint behavior:
+
 - `/people/{id}` - Accepts POST with body parameters
 - `/people/match` - Accepts POST with body parameters
 - Query parameters are for filtering, body parameters are for configuration
@@ -107,5 +118,5 @@ The `reveal_personal_emails` is a configuration/control parameter that must be i
 
 ---
 
-**This is the actual fix for the email_not_unlocked issue!** 🔥
-Apollo wasn't receiving the parameter correctly because it was sent as a query param instead of in the request body.
+**This is the actual fix for the email_not_unlocked issue!** 🔥 Apollo wasn't receiving the
+parameter correctly because it was sent as a query param instead of in the request body.

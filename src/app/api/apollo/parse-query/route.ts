@@ -9,14 +9,14 @@ const openai = new OpenAI({
 interface ParsedQuery {
   // Basic search
   keywords?: string;
-  
+
   // People search parameters
   person_titles?: string[];
   person_seniorities?: string[];
   person_locations?: string[];
   include_similar_titles?: boolean;
   contact_email_status?: string[];
-  
+
   // Organization search parameters
   organization_locations?: string[];
   organization_num_employees_ranges?: string[];
@@ -26,12 +26,12 @@ interface ParsedQuery {
     min?: number;
     max?: number;
   };
-  
+
   // Technology filters
   currently_using_all_of_technology_uids?: string[];
   currently_using_any_of_technology_uids?: string[];
   currently_not_using_any_of_technology_uids?: string[];
-  
+
   // Job posting filters
   q_organization_job_titles?: string[];
   organization_job_locations?: string[];
@@ -43,7 +43,7 @@ interface ParsedQuery {
     min?: string;
     max?: string;
   };
-  
+
   // Pagination
   page?: number;
   per_page?: number;
@@ -54,20 +54,14 @@ export async function POST(request: NextRequest) {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
     const { query } = body;
 
     if (!query || typeof query !== "string" || query.trim().length === 0) {
-      return NextResponse.json(
-        { error: "Query is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Query is required" }, { status: 400 });
     }
 
     console.log("🤖 AI Query Parser - Input query:", query);
@@ -159,17 +153,24 @@ Examples:
       include_similar_titles: parsedQuery.include_similar_titles ?? true,
       contact_email_status: parsedQuery.contact_email_status || [],
       organization_locations: parsedQuery.organization_locations || [],
-      organization_num_employees_ranges: parsedQuery.organization_num_employees_ranges || [],
+      organization_num_employees_ranges:
+        parsedQuery.organization_num_employees_ranges || [],
       organization_ids: parsedQuery.organization_ids || [],
-      q_organization_domains_list: parsedQuery.q_organization_domains_list || [],
+      q_organization_domains_list:
+        parsedQuery.q_organization_domains_list || [],
       revenue_range: parsedQuery.revenue_range || null,
-      currently_using_all_of_technology_uids: parsedQuery.currently_using_all_of_technology_uids || [],
-      currently_using_any_of_technology_uids: parsedQuery.currently_using_any_of_technology_uids || [],
-      currently_not_using_any_of_technology_uids: parsedQuery.currently_not_using_any_of_technology_uids || [],
+      currently_using_all_of_technology_uids:
+        parsedQuery.currently_using_all_of_technology_uids || [],
+      currently_using_any_of_technology_uids:
+        parsedQuery.currently_using_any_of_technology_uids || [],
+      currently_not_using_any_of_technology_uids:
+        parsedQuery.currently_not_using_any_of_technology_uids || [],
       q_organization_job_titles: parsedQuery.q_organization_job_titles || [],
       organization_job_locations: parsedQuery.organization_job_locations || [],
-      organization_num_jobs_range: parsedQuery.organization_num_jobs_range || null,
-      organization_job_posted_at_range: parsedQuery.organization_job_posted_at_range || null,
+      organization_num_jobs_range:
+        parsedQuery.organization_num_jobs_range || null,
+      organization_job_posted_at_range:
+        parsedQuery.organization_job_posted_at_range || null,
       page: parsedQuery.page || 1,
       per_page: parsedQuery.per_page || 25,
     };

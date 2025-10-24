@@ -2,19 +2,22 @@
 
 ## Overview
 
-Implemented a hybrid search strategy that combines Apollo's Organization Search and People Search endpoints for more accurate and refined lead discovery.
+Implemented a hybrid search strategy that combines Apollo's Organization Search and People Search
+endpoints for more accurate and refined lead discovery.
 
 ## What is Hybrid Search?
 
 Instead of searching across all people in Apollo's database:
+
 - **Traditional Search**: Search people → find matches → often noisy results
-- **Hybrid Search**: Search organizations → get matches → then find people within those organizations → more targeted results
+- **Hybrid Search**: Search organizations → get matches → then find people within those
+  organizations → more targeted results
 
 ### Why Hybrid is Better
 
 ```
 Traditional Search (Broad):
-  Search "VP in Tech" 
+  Search "VP in Tech"
   → Returns VPs from ALL companies
   → May include small companies not in your target
 
@@ -86,13 +89,14 @@ export interface OrganizationSearchParams {
 
 export interface OrganizationSearchResponse {
   organizations: ApolloOrganization[];
-  pagination: { page, per_page, total_entries, total_pages };
+  pagination: { page; per_page; total_entries; total_pages };
 }
 ```
 
 ### New Methods in ApolloClient
 
 #### 1. Organization Search
+
 ```typescript
 async searchOrganizations(
   params: OrganizationSearchParams
@@ -102,6 +106,7 @@ async searchOrganizations(
 **Purpose**: Find organizations matching criteria
 
 **Example**:
+
 ```typescript
 const orgs = await apolloClient.searchOrganizations({
   q_keywords: "technology artificial intelligence",
@@ -111,6 +116,7 @@ const orgs = await apolloClient.searchOrganizations({
 ```
 
 **Response**:
+
 ```typescript
 {
   organizations: [
@@ -128,6 +134,7 @@ const orgs = await apolloClient.searchOrganizations({
 ```
 
 #### 2. Hybrid Search
+
 ```typescript
 async hybridSearch(params: {
   q_keywords?: string;
@@ -143,6 +150,7 @@ async hybridSearch(params: {
 **Purpose**: Two-step search combining organizations then people
 
 **Example**:
+
 ```typescript
 const people = await apolloClient.hybridSearch({
   q_keywords: "VP",
@@ -155,7 +163,9 @@ const people = await apolloClient.hybridSearch({
 ```
 
 **Process**:
-1. Searches for organizations with `industry_keywords`, `organization_locations`, and `organization_num_employees_ranges`
+
+1. Searches for organizations with `industry_keywords`, `organization_locations`, and
+   `organization_num_employees_ranges`
 2. Extracts organization IDs from results
 3. Searches for people with `person_titles` and `q_keywords` WITHIN those organizations
 4. Returns people results filtered by organization match
@@ -196,11 +206,12 @@ Hybrid search shows detailed logging of both stages:
 ✅ **Better Filtering** - Organization-level filters (industry, size) applied first  
 ✅ **Reduced Noise** - Eliminates irrelevant companies before searching people  
 ✅ **Accurate Demographics** - Companies in your target market only  
-✅ **Better Quality Leads** - Focused on relevant organizations  
+✅ **Better Quality Leads** - Focused on relevant organizations
 
 ## Fallback Behavior
 
 If hybrid search fails (organizations not found, API error):
+
 1. Automatically falls back to standard people search
 2. Uses available people-level criteria
 3. No interruption to user experience
@@ -213,16 +224,19 @@ If hybrid search fails (organizations not found, API error):
 ## Performance Considerations
 
 ### API Calls
+
 - Organization search: 1 call
 - People search: 1 call
 - **Total: 2 API calls** (vs. 1 for standard search)
 
 ### Time
+
 - Organization search: ~1-2 seconds
 - People search: ~1-2 seconds
 - **Total: ~2-4 seconds** (slight overhead for better results)
 
 ### Rate Limits
+
 - Both searches respect Apollo rate limits
 - Combined credits usage is minimal
 - Fallback if either search fails
@@ -230,25 +244,29 @@ If hybrid search fails (organizations not found, API error):
 ## Use Cases
 
 ### Use Hybrid Search When:
+
 ✅ You have industry/size criteria (not just job titles)  
 ✅ You want highly targeted results  
 ✅ You're searching within specific company types  
-✅ You want companies in specific locations  
+✅ You want companies in specific locations
 
 ### Use Standard Search When:
+
 ⬜ Searching by just person attributes (titles, seniority)  
 ⬜ You don't care about company characteristics  
-⬜ You want fastest possible results  
+⬜ You want fastest possible results
 
 ## Future Enhancement: Search Route Integration
 
 Currently hybrid search is available via:
+
 ```typescript
 const apolloClient = getApolloClient();
 const results = await apolloClient.hybridSearch({...});
 ```
 
 Could be exposed via API route:
+
 ```
 POST /api/apollo/search/hybrid
 ```
@@ -256,6 +274,7 @@ POST /api/apollo/search/hybrid
 ## Code Examples
 
 ### Example 1: Tech VPs in SF
+
 ```typescript
 const results = await apolloClient.hybridSearch({
   industry_keywords: ["technology", "software"],
@@ -266,6 +285,7 @@ const results = await apolloClient.hybridSearch({
 ```
 
 ### Example 2: Sales Leaders in Enterprise
+
 ```typescript
 const results = await apolloClient.hybridSearch({
   industry_keywords: ["enterprise", "SaaS"],
@@ -276,6 +296,7 @@ const results = await apolloClient.hybridSearch({
 ```
 
 ### Example 3: Finance in NYC
+
 ```typescript
 const results = await apolloClient.hybridSearch({
   industry_keywords: ["finance", "fintech"],
@@ -288,6 +309,7 @@ const results = await apolloClient.hybridSearch({
 ## Error Handling
 
 ### Organization Search Fails
+
 ```
 🏢 Apollo Organization Search - Input params: {...}
 ❌ Apollo Organization Search - API Error: {
@@ -299,6 +321,7 @@ const results = await apolloClient.hybridSearch({
 ```
 
 ### People Search Fails (After Org Search Succeeds)
+
 ```
 ✅ Found 150 organizations...
 ❌ Apollo Search - API Error: {...}

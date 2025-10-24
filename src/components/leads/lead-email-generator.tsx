@@ -158,7 +158,3 @@ export function LeadEmailGenerator({ leadId }: LeadEmailGeneratorProps) {
     </div>
   );
 }
-
-
-
-

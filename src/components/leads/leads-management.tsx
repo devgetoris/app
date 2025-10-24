@@ -1,9 +1,21 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, Filter, SortAsc, SortDesc } from "lucide-react";
@@ -46,30 +58,40 @@ interface LeadsManagementProps {
 
 export function LeadsManagement({ leads }: LeadsManagementProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "company" | "createdAt" | "status">("createdAt");
+  const [sortBy, setSortBy] = useState<
+    "name" | "company" | "createdAt" | "status"
+  >("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [filterType, setFilterType] = useState<"all" | "individual" | "organization">("all");
-  const [filterStatus, setFilterStatus] = useState<"all" | "new" | "contacted" | "replied" | "converted" | "unsubscribed">("all");
+  const [filterType, setFilterType] = useState<
+    "all" | "individual" | "organization"
+  >("all");
+  const [filterStatus, setFilterStatus] = useState<
+    "all" | "new" | "contacted" | "replied" | "converted" | "unsubscribed"
+  >("all");
 
   // Filter and sort leads
   const filteredAndSortedLeads = useMemo(() => {
     let filtered = leads.filter(lead => {
       // Search filter
       const searchLower = searchQuery.toLowerCase();
-      const matchesSearch = !searchQuery || 
-        (lead.firstName?.toLowerCase().includes(searchLower)) ||
-        (lead.lastName?.toLowerCase().includes(searchLower)) ||
-        (lead.companyName?.toLowerCase().includes(searchLower)) ||
-        (lead.email?.toLowerCase().includes(searchLower)) ||
-        (lead.title?.toLowerCase().includes(searchLower));
+      const matchesSearch =
+        !searchQuery ||
+        lead.firstName?.toLowerCase().includes(searchLower) ||
+        lead.lastName?.toLowerCase().includes(searchLower) ||
+        lead.companyName?.toLowerCase().includes(searchLower) ||
+        lead.email?.toLowerCase().includes(searchLower) ||
+        lead.title?.toLowerCase().includes(searchLower);
 
       // Type filter
-      const matchesType = filterType === "all" || 
-        (filterType === "individual" && (lead.recordType === "individual" || lead.recordType === null)) ||
+      const matchesType =
+        filterType === "all" ||
+        (filterType === "individual" &&
+          (lead.recordType === "individual" || lead.recordType === null)) ||
         (filterType === "organization" && lead.recordType === "organization");
 
       // Status filter
-      const matchesStatus = filterStatus === "all" || lead.status === filterStatus;
+      const matchesStatus =
+        filterStatus === "all" || lead.status === filterStatus;
 
       return matchesSearch && matchesType && matchesStatus;
     });
@@ -81,8 +103,14 @@ export function LeadsManagement({ leads }: LeadsManagementProps) {
 
       switch (sortBy) {
         case "name":
-          aValue = `${a.firstName || ""} ${a.lastName || ""}`.trim() || a.companyName || "";
-          bValue = `${b.firstName || ""} ${b.lastName || ""}`.trim() || b.companyName || "";
+          aValue =
+            `${a.firstName || ""} ${a.lastName || ""}`.trim() ||
+            a.companyName ||
+            "";
+          bValue =
+            `${b.firstName || ""} ${b.lastName || ""}`.trim() ||
+            b.companyName ||
+            "";
           break;
         case "company":
           aValue = a.companyName || "";
@@ -121,7 +149,8 @@ export function LeadsManagement({ leads }: LeadsManagementProps) {
     setSortOrder("desc");
   };
 
-  const hasActiveFilters = searchQuery || filterType !== "all" || filterStatus !== "all";
+  const hasActiveFilters =
+    searchQuery || filterType !== "all" || filterStatus !== "all";
 
   return (
     <div className="space-y-6">
@@ -149,7 +178,7 @@ export function LeadsManagement({ leads }: LeadsManagementProps) {
               <Input
                 placeholder="Search by name, company, email, or title..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -159,7 +188,10 @@ export function LeadsManagement({ leads }: LeadsManagementProps) {
               {/* Type Filter */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Type</label>
-                <Select value={filterType} onValueChange={(value: any) => setFilterType(value)}>
+                <Select
+                  value={filterType}
+                  onValueChange={(value: any) => setFilterType(value)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -174,7 +206,10 @@ export function LeadsManagement({ leads }: LeadsManagementProps) {
               {/* Status Filter */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Status</label>
-                <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
+                <Select
+                  value={filterStatus}
+                  onValueChange={(value: any) => setFilterStatus(value)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -192,7 +227,10 @@ export function LeadsManagement({ leads }: LeadsManagementProps) {
               {/* Sort By */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Sort By</label>
-                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                <Select
+                  value={sortBy}
+                  onValueChange={(value: any) => setSortBy(value)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -238,21 +276,17 @@ export function LeadsManagement({ leads }: LeadsManagementProps) {
             {/* Active Filters Display */}
             {hasActiveFilters && (
               <div className="flex flex-wrap gap-2 pt-2">
-                <span className="text-sm text-muted-foreground">Active filters:</span>
+                <span className="text-sm text-muted-foreground">
+                  Active filters:
+                </span>
                 {searchQuery && (
-                  <Badge variant="secondary">
-                    Search: "{searchQuery}"
-                  </Badge>
+                  <Badge variant="secondary">Search: "{searchQuery}"</Badge>
                 )}
                 {filterType !== "all" && (
-                  <Badge variant="secondary">
-                    Type: {filterType}
-                  </Badge>
+                  <Badge variant="secondary">Type: {filterType}</Badge>
                 )}
                 {filterStatus !== "all" && (
-                  <Badge variant="secondary">
-                    Status: {filterStatus}
-                  </Badge>
+                  <Badge variant="secondary">Status: {filterStatus}</Badge>
                 )}
               </div>
             )}
@@ -266,16 +300,16 @@ export function LeadsManagement({ leads }: LeadsManagementProps) {
           <CardHeader>
             <CardTitle>No leads found</CardTitle>
             <CardDescription>
-              {leads.length === 0 
+              {leads.length === 0
                 ? "You haven't imported any leads yet. Use the search functionality to find and import leads."
-                : "Try adjusting your search or filter criteria."
-              }
+                : "Try adjusting your search or filter criteria."}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {leads.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Get started by searching for leads using the AI-powered search interface.
+                Get started by searching for leads using the AI-powered search
+                interface.
               </p>
             ) : (
               <Button variant="outline" onClick={clearFilters}>
@@ -286,7 +320,7 @@ export function LeadsManagement({ leads }: LeadsManagementProps) {
         </Card>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAndSortedLeads.map((lead) => (
+          {filteredAndSortedLeads.map(lead => (
             <LeadCard key={lead.id} lead={lead} />
           ))}
         </div>

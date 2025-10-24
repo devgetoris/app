@@ -6,33 +6,38 @@ This document explains the fix applied to retrieve personal emails from the Apol
 
 ## Problem
 
-Leads were being imported without email addresses, showing `email_not_unlocked` instead of actual email values.
+Leads were being imported without email addresses, showing `email_not_unlocked` instead of actual
+email values.
 
 ## Root Cause
 
-The Apollo API requires the `reveal_personal_emails=true` parameter to return personal email addresses. This parameter was not being included in the API requests.
+The Apollo API requires the `reveal_personal_emails=true` parameter to return personal email
+addresses. This parameter was not being included in the API requests.
 
 ## Solution
 
 ### Changes Made
 
 #### 1. **Updated `/src/lib/apollo.ts`**
-   - Added `reveal_personal_emails: true` parameter to `searchContacts()` method
-   - Added `reveal_personal_emails: true` parameter to `enrichContact()` method  
-   - Added `reveal_personal_emails: true` parameter to `getContactById()` method
-   - Added comprehensive console logging with emoji indicators for easier debugging
+
+- Added `reveal_personal_emails: true` parameter to `searchContacts()` method
+- Added `reveal_personal_emails: true` parameter to `enrichContact()` method
+- Added `reveal_personal_emails: true` parameter to `getContactById()` method
+- Added comprehensive console logging with emoji indicators for easier debugging
 
 #### 2. **Updated `/src/app/api/apollo/search/route.ts`**
-   - Added detailed per-contact logging to track email retrieval
-   - Added skip logic for contacts without emails
-   - Enhanced error messages with context
-   - Logs show: Processing status → Enrichment → Email status → Save confirmation
+
+- Added detailed per-contact logging to track email retrieval
+- Added skip logic for contacts without emails
+- Enhanced error messages with context
+- Logs show: Processing status → Enrichment → Email status → Save confirmation
 
 #### 3. **Updated `/src/app/api/apollo/enrich/route.ts`**
-   - Added request logging to show what parameters are being used
-   - Added detailed response logging for email retrieval
-   - Added context to error messages
-   - Shows final email value before returning response
+
+- Added request logging to show what parameters are being used
+- Added detailed response logging for email retrieval
+- Added context to error messages
+- Shows final email value before returning response
 
 ## Console Logging Output
 
@@ -61,18 +66,18 @@ When performing a lead search, you'll now see logs like:
 
 ### Debug Legend
 
-| Symbol | Meaning |
-|--------|---------|
-| 🔍 | Searching or retrieving data |
-| 📤 | Sending data to API |
-| ✅ | Success |
-| ❌ | Failure/Skip |
-| ⚠️ | Warning |
-| 📌 | Processing stage |
-| 💾 | Saving to database |
-| 🔧 | Configuration/Setup |
-| ℹ️ | Information |
-| ✨ | Complete/Final |
+| Symbol | Meaning                      |
+| ------ | ---------------------------- |
+| 🔍     | Searching or retrieving data |
+| 📤     | Sending data to API          |
+| ✅     | Success                      |
+| ❌     | Failure/Skip                 |
+| ⚠️     | Warning                      |
+| 📌     | Processing stage             |
+| 💾     | Saving to database           |
+| 🔧     | Configuration/Setup          |
+| ℹ️     | Information                  |
+| ✨     | Complete/Final               |
 
 ## How to Verify the Fix
 
@@ -96,19 +101,22 @@ When performing a lead search, you'll now see logs like:
 
 ### Issue: Still seeing `email_not_unlocked`
 
-**Root Cause (FOUND & FIXED):**
-The issue was that when sending contacts to Apollo's bulk enrichment endpoint, we were passing the `email_not_unlocked@domain.com` placeholder as the email field. Apollo couldn't match this fake email to reveal the real email address.
+**Root Cause (FOUND & FIXED):** The issue was that when sending contacts to Apollo's bulk enrichment
+endpoint, we were passing the `email_not_unlocked@domain.com` placeholder as the email field. Apollo
+couldn't match this fake email to reveal the real email address.
 
-**The Fix:**
-Modified the bulk enrichment request to NOT send the `email` field when it contains the `email_not_unlocked` placeholder. Instead, we now rely on:
+**The Fix:** Modified the bulk enrichment request to NOT send the `email` field when it contains the
+`email_not_unlocked` placeholder. Instead, we now rely on:
+
 - `first_name` + `last_name` combination
 - `linkedin_url` (primary identifier for matching)
 - `organization_name`
 
-This allows Apollo to properly match the contact and reveal their actual personal email, bypassing the `email_not_unlocked` placeholder.
+This allows Apollo to properly match the contact and reveal their actual personal email, bypassing
+the `email_not_unlocked` placeholder.
 
-**Changes Made:**
-In `/src/app/api/apollo/search/route.ts` (lines 135-142):
+**Changes Made:** In `/src/app/api/apollo/search/route.ts` (lines 135-142):
+
 ```typescript
 const bulkDetails = batch.map(contact => ({
   first_name: contact.first_name,
@@ -121,6 +129,7 @@ const bulkDetails = batch.map(contact => ({
 ```
 
 **How It Works:**
+
 1. Initial search returns contacts with `email_not_unlocked`
 2. During bulk enrichment, we skip sending the fake email
 3. Apollo matches on LinkedIn URL + name + company instead
@@ -128,11 +137,13 @@ const bulkDetails = batch.map(contact => ({
 5. Real emails are saved to database
 
 **Causes (If Still Seeing `email_not_unlocked`):**
+
 - Apollo API key doesn't have permission to reveal emails
 - User's account on Apollo is on the free tier (which doesn't reveal emails)
 - Contact is in a GDPR-compliant region
 
 **Solution:**
+
 1. Verify your Apollo plan supports email revelation
 2. Check API key permissions in Apollo dashboard
 3. Review GDPR restrictions for specific contacts
@@ -140,11 +151,13 @@ const bulkDetails = batch.map(contact => ({
 ### Issue: No emails returned at all
 
 **Possible Causes:**
+
 - API key invalid or expired
 - Rate limits exceeded
 - Apollo API downtime
 
 **Debug Steps:**
+
 1. Check console logs for error messages (marked with ❌)
 2. Verify `APOLLO_API_KEY` environment variable is set
 3. Test Apollo API directly with curl using the documented examples
@@ -153,11 +166,13 @@ const bulkDetails = batch.map(contact => ({
 ### Issue: Only some contacts have emails
 
 **Possible Causes:**
+
 - Those contacts genuinely don't have emails in Apollo's database
 - Those contacts are in GDPR regions
 - Enrichment failed for those specific records
 
 **What to Check:**
+
 1. Review the per-contact logs for ⚠️ warnings
 2. Check if enrichment failed for specific contacts
 3. Verify GDPR country restrictions
@@ -168,11 +183,13 @@ const bulkDetails = batch.map(contact => ({
 
 According to Apollo API documentation:
 
-> Set to true if you want to enrich all matched people with personal emails. This potentially consumes credits as part of your Apollo pricing plan. The default value is false.
-> 
+> Set to true if you want to enrich all matched people with personal emails. This potentially
+> consumes credits as part of your Apollo pricing plan. The default value is false.
+>
 > If a person resides in a GDPR-compliant region, Apollo will not reveal their personal email.
 
 **Credit Consumption:**
+
 - Revealing emails consumes additional credits per the Apollo pricing plan
 - Monitor your Apollo dashboard for credit usage
 - Each person enriched with email revelation counts against your quota
@@ -180,11 +197,13 @@ According to Apollo API documentation:
 ## Monitoring
 
 ### Daily Checks
+
 - Monitor Apollo API usage in Apollo dashboard
 - Check for any API errors in server logs
 - Verify successful email enrichment rate
 
 ### Weekly Reviews
+
 - Review credit consumption trends
 - Check if GDPR blocks are increasing
 - Adjust search criteria if needed
@@ -199,6 +218,7 @@ Apollo API has the following rate limits:
 - **Daily limit**: 10,000 requests/day
 
 **Impact on Implementation:**
+
 - Search endpoint respects these limits
 - Enrich endpoint respects these limits
 - If limit is exceeded, Apollo returns a 429 error (logged as ❌)

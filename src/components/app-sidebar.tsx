@@ -27,8 +27,6 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { UserButton } from "@clerk/nextjs";
-import { OrisAILogo } from "@/components/orisai-logo";
 
 // This is sample data.
 const data = {
@@ -76,7 +74,7 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
 
-  const NavItem = React.memo(({ item }: { item: typeof data.navMain[0] }) => (
+  const NavItem = React.memo(({ item }: { item: (typeof data.navMain)[0] }) => (
     <SidebarMenuItem key={item.title}>
       <SidebarMenuButton
         asChild
@@ -91,20 +89,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     </SidebarMenuItem>
   ));
 
-  const SecondaryNavItem = React.memo(({ item }: { item: typeof data.navSecondary[0] }) => (
-    <SidebarMenuItem key={item.title}>
-      <SidebarMenuButton
-        asChild
-        isActive={pathname === item.url}
-        tooltip={item.title}
-      >
-        <Link href={item.url}>
-          <item.icon />
-          <span>{item.title}</span>
-        </Link>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  ));
+  const SecondaryNavItem = React.memo(
+    ({ item }: { item: (typeof data.navSecondary)[0] }) => (
+      <SidebarMenuItem key={item.title}>
+        <SidebarMenuButton
+          asChild
+          isActive={pathname === item.url}
+          tooltip={item.title}
+        >
+          <Link href={item.url}>
+            <item.icon />
+            <span>{item.title}</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    )
+  );
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -149,15 +149,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <div className="flex items-center gap-2 px-2 py-1.5">
-              <UserButton afterSignOutUrl="/auth/sign-in" />
-            </div>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

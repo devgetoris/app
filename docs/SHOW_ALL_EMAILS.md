@@ -2,16 +2,19 @@
 
 ## Change Summary
 
-Updated the lead search and enrichment endpoints to display **all leads regardless of email status**, including those with `email_not_unlocked` values.
+Updated the lead search and enrichment endpoints to display **all leads regardless of email
+status**, including those with `email_not_unlocked` values.
 
 ## What Changed
 
 ### Before
+
 - Leads with `email_not_unlocked` were filtered out (skipped)
 - Only leads with valid, revealed emails were displayed
 - Some potential leads were completely hidden from users
 
 ### After
+
 - **All leads are displayed** regardless of email status
 - Emails show as `email_not_unlocked` when Apollo hasn't revealed them
 - Users can see all available leads and their information
@@ -22,6 +25,7 @@ Updated the lead search and enrichment endpoints to display **all leads regardle
 ### 1. `/src/app/api/apollo/search/route.ts`
 
 **Removed:**
+
 ```typescript
 // Skip leads with unrevealed emails
 if (enrichedContact.email?.includes("email_not_unlocked")) {
@@ -36,9 +40,10 @@ if (!enrichedContact.email) {
 ```
 
 **Added:**
+
 ```typescript
 // Show all leads regardless of email status (even if email_not_unlocked)
-console.log(`ℹ️ Email status: ${enrichedContact.email || 'NO EMAIL'}`);
+console.log(`ℹ️ Email status: ${enrichedContact.email || "NO EMAIL"}`);
 
 // ... saves ALL leads to database ...
 
@@ -49,32 +54,33 @@ savedLeads.push(existingLead);
 ### 2. `/src/app/api/apollo/enrich/route.ts`
 
 **Removed:**
+
 ```typescript
 // Skip leads with unrevealed emails
 if (contact.email?.includes("email_not_unlocked")) {
   console.log(`❌ Email locked for contact. Email value: ${contact.email}`);
-  return NextResponse.json(
-    { error: "Email not revealed for this contact" },
-    { status: 400 }
-  );
+  return NextResponse.json({ error: "Email not revealed for this contact" }, { status: 400 });
 }
 ```
 
 **Added:**
+
 ```typescript
 // Show all leads regardless of email status (even if email_not_unlocked)
-console.log(`ℹ️ Email status: ${contact.email || 'NO EMAIL'}`);
+console.log(`ℹ️ Email status: ${contact.email || "NO EMAIL"}`);
 ```
 
 ## User Experience Impact
 
 ### Dashboard / Leads Page
+
 - ✅ All leads now appear in the list
 - ✅ Users can see leads even if emails aren't revealed
 - ✅ `email_not_unlocked` appears in the email field for locked emails
 - ✅ Users know all available contacts (even those needing email unlock)
 
 ### Workflow
+
 1. Search for leads (AI or Advanced mode)
 2. **All matching leads appear** - no hidden results
 3. Some emails show `email_not_unlocked` (need to reveal on Apollo)
@@ -100,13 +106,15 @@ Now shows clearer email status for all leads:
 ✅ **Better Decision Making** - Know what leads exist, even if emails need unlocking  
 ✅ **No Hidden Data** - Nothing is secretly filtered out  
 ✅ **Complete Lead List** - Get all results, not a subset  
-✅ **Context** - See company, title, location for all leads  
+✅ **Context** - See company, title, location for all leads
 
 ## Next Steps (If Needed)
 
-If you want to hide contacts with locked emails again in the future, the filters are documented here for easy re-implementation.
+If you want to hide contacts with locked emails again in the future, the filters are documented here
+for easy re-implementation.
 
 To only show unlocked emails again:
+
 1. Add back the `email_not_unlocked` check in both routes
 2. Skip leads where `contact.email?.includes("email_not_unlocked")`
 3. Add `continue;` to skip to next contact
@@ -114,11 +122,13 @@ To only show unlocked emails again:
 ## API Behavior
 
 ### Search Endpoint (`POST /api/apollo/search`)
+
 - **Returns:** All matched leads regardless of email status
 - **Email field:** Contains either actual email or `email_not_unlocked`
 - **No filtering:** All contacts from Apollo API included
 
 ### Enrich Endpoint (`POST /api/apollo/enrich`)
+
 - **Returns:** Contact data for specified Apollo ID or email
 - **Email field:** Shows whatever Apollo returns (locked or unlocked)
 - **No errors:** Doesn't reject leads with locked emails
@@ -156,14 +166,13 @@ To only show unlocked emails again:
 
 ## Troubleshooting
 
-**Q: Why are some emails showing `email_not_unlocked`?**
-A: Apollo hasn't revealed their personal emails yet. You may need to upgrade your Apollo plan or request email revelation.
+**Q: Why are some emails showing `email_not_unlocked`?** A: Apollo hasn't revealed their personal
+emails yet. You may need to upgrade your Apollo plan or request email revelation.
 
-**Q: Can I still filter these out in my UI?**
-A: Yes! On the frontend, you can add client-side filtering if you only want to show leads with actual emails.
+**Q: Can I still filter these out in my UI?** A: Yes! On the frontend, you can add client-side
+filtering if you only want to show leads with actual emails.
 
-**Q: How do I unlock emails?**
-A: Through the Apollo dashboard > Settings > Email Reveal options
+**Q: How do I unlock emails?** A: Through the Apollo dashboard > Settings > Email Reveal options
 
 ---
 

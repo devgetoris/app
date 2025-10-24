@@ -2,11 +2,13 @@
 
 ## Overview
 
-Implemented Apollo's Bulk People Enrichment API to significantly improve performance and reduce API call overhead when enriching multiple contacts.
+Implemented Apollo's Bulk People Enrichment API to significantly improve performance and reduce API
+call overhead when enriching multiple contacts.
 
 ## What Is Bulk Enrichment?
 
 Instead of making individual API calls for each contact:
+
 - **Before**: 25 contacts = 25 API calls
 - **After**: 25 contacts = 3 API calls (batched in groups of 10)
 
@@ -15,6 +17,7 @@ This reduces API calls by ~90% while maintaining the same functionality.
 ## How It Works
 
 ### Batching Strategy
+
 1. Takes all search results (e.g., 25 contacts)
 2. Groups them into batches of 10 (Apollo's API limit)
 3. Sends each batch to Apollo's `/people/bulk_match` endpoint
@@ -37,6 +40,7 @@ All enriched data saved to database
 ### 1. `/src/lib/apollo.ts`
 
 **Added Interfaces:**
+
 ```typescript
 interface BulkEnrichmentDetail {
   first_name?: string;
@@ -55,6 +59,7 @@ interface BulkEnrichmentResponse {
 ```
 
 **Added Method:**
+
 ```typescript
 async bulkEnrichContacts(
   details: BulkEnrichmentDetail[]
@@ -62,6 +67,7 @@ async bulkEnrichContacts(
 ```
 
 Features:
+
 - Accepts up to 10 contact details
 - Automatically limits to 10 if more provided
 - Includes comprehensive logging with emoji indicators
@@ -71,6 +77,7 @@ Features:
 ### 2. `/src/app/api/apollo/search/route.ts`
 
 **Changed From:**
+
 ```typescript
 for (const contact of response.people || response.contacts || []) {
   // Individual enrichment for each contact
@@ -80,6 +87,7 @@ for (const contact of response.people || response.contacts || []) {
 ```
 
 **Changed To:**
+
 ```typescript
 // Batch contacts into groups of 10
 for (let i = 0; i < allContacts.length; i += 10) {
@@ -96,25 +104,30 @@ for (const batch of contactBatches) {
 ## Performance Improvements
 
 ### API Call Reduction
-| Scenario | Before | After | Reduction |
-|----------|--------|-------|-----------|
-| 10 contacts | 10 calls | 1 call | 90% |
-| 25 contacts | 25 calls | 3 calls | 88% |
-| 50 contacts | 50 calls | 5 calls | 90% |
-| 100 contacts | 100 calls | 10 calls | 90% |
+
+| Scenario     | Before    | After    | Reduction |
+| ------------ | --------- | -------- | --------- |
+| 10 contacts  | 10 calls  | 1 call   | 90%       |
+| 25 contacts  | 25 calls  | 3 calls  | 88%       |
+| 50 contacts  | 50 calls  | 5 calls  | 90%       |
+| 100 contacts | 100 calls | 10 calls | 90%       |
 
 ### Estimated Speed Improvement
+
 - **Before**: ~25-50 seconds (25 contacts × 1-2s per call)
 - **After**: ~3-5 seconds (3 batches × 1-2s per batch)
 - **Speedup**: 5-10x faster
 
 ### Rate Limit Handling
+
 Apollo's rate limits:
+
 - Per-minute: 100 requests/min
 - Hourly: 1000 requests/hour
 - Daily: 10,000 requests/day
 
 With bulk enrichment:
+
 - **Before**: Could hit per-minute limit at 100+ contacts
 - **After**: Can handle 1000 contacts before hitting per-minute limit
 
@@ -153,6 +166,7 @@ New bulk enrichment logging shows:
 **POST** `/api/v1/people/bulk_match`
 
 **Request Body:**
+
 ```json
 {
   "details": [
@@ -162,7 +176,7 @@ New bulk enrichment logging shows:
       "email": "john@company.com",
       "linkedin_url": "https://linkedin.com/in/johnsmith",
       "organization_name": "Acme Corp"
-    },
+    }
     // ... up to 10 items ...
   ],
   "reveal_personal_emails": true
@@ -170,13 +184,18 @@ New bulk enrichment logging shows:
 ```
 
 **Response:**
+
 ```json
 {
   "enriched_data": [
     {
-      "details": { /* input details */ },
-      "person": { /* enriched contact data */ }
-    },
+      "details": {
+        /* input details */
+      },
+      "person": {
+        /* enriched contact data */
+      }
+    }
     // ... up to 10 items ...
   ]
 }
@@ -185,6 +204,7 @@ New bulk enrichment logging shows:
 ## Fallback Behavior
 
 If bulk enrichment fails:
+
 1. Batch is caught as error
 2. Falls back to original search contact data
 3. Continues processing remaining batches
@@ -212,13 +232,13 @@ const details = [
     first_name: "John",
     last_name: "Smith",
     email: "john@example.com",
-    organization_name: "Tech Corp"
+    organization_name: "Tech Corp",
   },
   {
     first_name: "Jane",
     last_name: "Doe",
     email: "jane@example.com",
-    organization_name: "StartupXYZ"
+    organization_name: "StartupXYZ",
   },
   // ... up to 10 ...
 ];
@@ -239,7 +259,7 @@ response.enriched_data?.forEach(item => {
 ✅ **Fewer rate limit errors** - More requests per API window  
 ✅ **Better performance** - Reduces server load and latency  
 ✅ **Same features** - All enrichment data still available  
-✅ **Automatic batching** - No manual batching needed  
+✅ **Automatic batching** - No manual batching needed
 
 ## Limitations
 
@@ -258,6 +278,7 @@ response.enriched_data?.forEach(item => {
 4. Check that email data is populated
 
 ### Expected Output
+
 ```
 📦 Bulk Enrichment - Processing 25 contacts in 3 batch(es)
 📥 Batch 1/3 - Enriching 10 contacts...
@@ -280,20 +301,25 @@ response.enriched_data?.forEach(item => {
 ## Migration Guide
 
 ### For Users
+
 No changes needed! The feature is automatic:
+
 1. Search works exactly the same
 2. Results appear faster (5-10x improvement)
 3. All enriched data available as before
 
 ### For Developers
+
 If using the Apollo client directly:
 
 **Old way** (still works):
+
 ```typescript
 const person = await apolloClient.getContactById(id);
 ```
 
 **New way** (for bulk operations):
+
 ```typescript
 const response = await apolloClient.bulkEnrichContacts(details);
 ```
@@ -303,11 +329,13 @@ const response = await apolloClient.bulkEnrichContacts(details);
 ### Issue: Bulk enrichment API returns empty enriched_data
 
 **Causes:**
+
 - Contacts don't exist in Apollo database
 - Email addresses not recognized
 - Apollo subscription doesn't support enrichment
 
 **Solution:**
+
 - Check individual contact details are correct
 - Verify contacts exist in Apollo
 - Check Apollo subscription level
@@ -315,6 +343,7 @@ const response = await apolloClient.bulkEnrichContacts(details);
 ### Issue: Some batches fail but others succeed
 
 **Expected behavior:**
+
 - Individual batch failures are caught
 - Remaining batches continue
 - Fallback uses search data for failed batch
@@ -324,11 +353,13 @@ const response = await apolloClient.bulkEnrichContacts(details);
 ### Issue: Enrichment taking longer than before
 
 **Possible causes:**
+
 - Search returning more results now (showing all emails)
 - Multiple large batches processing
 - API latency variance
 
 **Typical times:**
+
 - 1-10 contacts: ~1-2 seconds
 - 11-25 contacts: ~2-3 seconds
 - 26-50 contacts: ~3-4 seconds
@@ -342,4 +373,5 @@ const response = await apolloClient.bulkEnrichContacts(details);
 
 ---
 
-Bulk enrichment is now the default enrichment method for lead searches, providing significant performance improvements! 🚀
+Bulk enrichment is now the default enrichment method for lead searches, providing significant
+performance improvements! 🚀

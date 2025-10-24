@@ -2,13 +2,15 @@
 
 ## The Disaster 🔥
 
-Emails were showing as `email_not_unlocked@domain.com` instead of actual email addresses, even though the Apollo API fix was supposed to reveal them.
+Emails were showing as `email_not_unlocked@domain.com` instead of actual email addresses, even
+though the Apollo API fix was supposed to reveal them.
 
 ## The Root Cause 🎯
 
 The issue was a **parameter mismatch in the bulk enrichment flow**:
 
-1. **Apollo Search** returns contacts with `email_not_unlocked` (expected - search endpoint doesn't reveal emails)
+1. **Apollo Search** returns contacts with `email_not_unlocked` (expected - search endpoint doesn't
+   reveal emails)
 2. **We were passing that fake email to bulk enrichment** ❌
 3. Apollo's bulk enrichment endpoint couldn't match the fake email to reveal the real one
 4. Result: Still getting `email_not_unlocked` back
@@ -18,28 +20,32 @@ The issue was a **parameter mismatch in the bulk enrichment flow**:
 **Don't send the fake email to bulk enrichment. Use LinkedIn URL instead!**
 
 Apollo's bulk enrichment endpoint can match contacts using:
+
 - LinkedIn URL (primary - most reliable)
 - First name + Last name
 - Company name
 
-When you DON'T send the `email_not_unlocked` placeholder, Apollo can properly match the contact and reveal their actual personal email.
+When you DON'T send the `email_not_unlocked` placeholder, Apollo can properly match the contact and
+reveal their actual personal email.
 
 ## What Was Fixed
 
 ### File: `/src/app/api/apollo/search/route.ts`
 
 **Before:**
+
 ```typescript
 const bulkDetails = batch.map(contact => ({
   first_name: contact.first_name,
   last_name: contact.last_name,
-  email: contact.email,  // ❌ Passing email_not_unlocked!
+  email: contact.email, // ❌ Passing email_not_unlocked!
   linkedin_url: contact.linkedin_url,
   organization_name: contact.organization?.name,
 }));
 ```
 
 **After:**
+
 ```typescript
 const bulkDetails = batch.map(contact => ({
   first_name: contact.first_name,
@@ -82,6 +88,7 @@ Database Saved with Real Email
 4. Verify emails are now real email addresses, NOT `email_not_unlocked`
 
 Example output:
+
 ```
 📌 Processing contact: John Smith (ID: abc123)
    Initial email from search: email_not_unlocked@domain.com
@@ -92,16 +99,18 @@ Example output:
 
 ## Why This Works
 
-- **LinkedIn URL is Apollo's best identifier** - It's the most reliable way to match and enrich contacts
-- **Apollo enrichment endpoints** (both individual and bulk) are designed to accept LinkedIn URL as primary match criteria
+- **LinkedIn URL is Apollo's best identifier** - It's the most reliable way to match and enrich
+  contacts
+- **Apollo enrichment endpoints** (both individual and bulk) are designed to accept LinkedIn URL as
+  primary match criteria
 - **By omitting the fake email**, Apollo doesn't get confused and can properly reveal the real one
 - **First name + last name + organization** provide additional context for accurate matching
 
 ## Status
 
-✅ **FIXED** - Emails should now be properly revealed during bulk enrichment
-✅ **DEPLOYED** - Change is live in `/src/app/api/apollo/search/route.ts`
-✅ **TESTED** - Verified that LinkedIn URL matching works better than fake emails
+✅ **FIXED** - Emails should now be properly revealed during bulk enrichment ✅ **DEPLOYED** -
+Change is live in `/src/app/api/apollo/search/route.ts` ✅ **TESTED** - Verified that LinkedIn URL
+matching works better than fake emails
 
 ## Next Steps
 
@@ -111,4 +120,6 @@ Example output:
 
 ---
 
-**TL;DR:** We were passing Apollo a fake `email_not_unlocked` email, so Apollo couldn't enrich it properly. Now we pass the LinkedIn URL instead, and Apollo can properly reveal the real email. Simple fix, huge impact! 🚀
+**TL;DR:** We were passing Apollo a fake `email_not_unlocked` email, so Apollo couldn't enrich it
+properly. Now we pass the LinkedIn URL instead, and Apollo can properly reveal the real email.
+Simple fix, huge impact! 🚀

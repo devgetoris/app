@@ -4,22 +4,21 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { 
-  Building2, 
-  Users, 
-  MapPin, 
-  Globe, 
-  DollarSign, 
-  TrendingUp, 
-  Linkedin, 
-  Twitter, 
-  Facebook, 
+import {
+  Building2,
+  Users,
+  MapPin,
+  Globe,
+  DollarSign,
+  TrendingUp,
+  Linkedin,
+  Twitter,
+  Facebook,
   Github,
   ExternalLink,
   Briefcase,
-  Calendar
+  Calendar,
 } from "lucide-react";
-
 
 interface Lead {
   id: string;
@@ -53,8 +52,8 @@ interface Lead {
 
 export function LeadCard({ lead }: { lead: Lead }) {
   const isOrganization = lead.recordType === "organization";
-  const displayName = isOrganization 
-    ? lead.companyName || "Organization" 
+  const displayName = isOrganization
+    ? lead.companyName || "Organization"
     : `${lead.firstName || ""} ${lead.lastName || ""}`.trim();
 
   // Helper function to format company size
@@ -62,7 +61,7 @@ export function LeadCard({ lead }: { lead: Lead }) {
     if (!size) return null;
     const numSize = parseInt(size);
     if (isNaN(numSize)) return size;
-    
+
     if (numSize >= 1000) {
       return `${(numSize / 1000).toFixed(1)}k employees`;
     }
@@ -71,7 +70,11 @@ export function LeadCard({ lead }: { lead: Lead }) {
 
   // Helper function to get location string
   const getLocationString = () => {
-    const parts = [lead.companyCity, lead.companyState, lead.companyCountry].filter(Boolean);
+    const parts = [
+      lead.companyCity,
+      lead.companyState,
+      lead.companyCountry,
+    ].filter(Boolean);
     return parts.length > 0 ? parts.join(", ") : lead.companyLocation;
   };
 
@@ -104,7 +107,10 @@ export function LeadCard({ lead }: { lead: Lead }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="font-semibold text-lg truncate">{displayName}</h3>
-              <Badge variant={isOrganization ? "secondary" : "default"} className="text-xs">
+              <Badge
+                variant={isOrganization ? "secondary" : "default"}
+                className="text-xs"
+              >
                 {isOrganization ? "Organization" : "Individual"}
               </Badge>
             </div>
@@ -123,7 +129,6 @@ export function LeadCard({ lead }: { lead: Lead }) {
                 {lead.companyName}
               </p>
             )}
-            
           </div>
         </div>
       </CardHeader>
@@ -138,7 +143,9 @@ export function LeadCard({ lead }: { lead: Lead }) {
                 <div className="flex items-center gap-2 text-sm">
                   <Users className="w-4 h-4 text-muted-foreground" />
                   <span className="text-muted-foreground">Size:</span>
-                  <span className="font-medium">{formatCompanySize(lead.companySize)}</span>
+                  <span className="font-medium">
+                    {formatCompanySize(lead.companySize)}
+                  </span>
                 </div>
               )}
               {lead.companyRevenue && (
@@ -177,26 +184,27 @@ export function LeadCard({ lead }: { lead: Lead }) {
             )}
 
             {/* Technologies */}
-            {lead.companyTechnologies && lead.companyTechnologies.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Briefcase className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Technologies:</span>
+            {lead.companyTechnologies &&
+              lead.companyTechnologies.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Briefcase className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Technologies:</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {lead.companyTechnologies.slice(0, 4).map((tech, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {tech}
+                      </Badge>
+                    ))}
+                    {lead.companyTechnologies.length > 4 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{lead.companyTechnologies.length - 4} more
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-1">
-                  {lead.companyTechnologies.slice(0, 4).map((tech, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
-                      {tech}
-                    </Badge>
-                  ))}
-                  {lead.companyTechnologies.length > 4 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{lead.companyTechnologies.length - 4} more
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            )}
+              )}
 
             {/* Funding Status */}
             {lead.companyFunding && (

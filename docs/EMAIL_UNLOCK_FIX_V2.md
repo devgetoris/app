@@ -2,11 +2,13 @@
 
 ## What Changed
 
-Switched from **bulk enrichment** (which was struggling to match contacts) to **individual Apollo ID enrichment** (which is direct and reliable).
+Switched from **bulk enrichment** (which was struggling to match contacts) to **individual Apollo ID
+enrichment** (which is direct and reliable).
 
 ## The Real Problem
 
 The bulk enrichment endpoint couldn't match contacts because:
+
 1. We removed the email (even though it was fake) to avoid confusion
 2. Some contacts might not have complete LinkedIn URLs
 3. Without good matching info, Apollo couldn't find them to enrich
@@ -64,6 +66,7 @@ Save to Database
 ## Expected Output
 
 Now you should see:
+
 ```
 📥 Batch 1/3 - Enriching 10 contacts...
 🔧 Enriching by Apollo ID: 642c5ca34f84bd0001875fa8
@@ -81,6 +84,7 @@ Now you should see:
 **File:** `/src/app/api/apollo/search/route.ts`
 
 **What changed:**
+
 - Removed bulk enrichment with pattern matching
 - Added individual enrichment loop using Apollo IDs
 - Each contact enriched via `getContactById(contact.id)`
@@ -103,4 +107,6 @@ Now you should see:
 
 ---
 
-**TL;DR:** Apollo ID is the most direct identifier. Using `getContactById()` directly on each contact guarantees we can reveal emails, instead of trying to match via bulk enrichment which was failing. This is a more reliable approach. 🚀
+**TL;DR:** Apollo ID is the most direct identifier. Using `getContactById()` directly on each
+contact guarantees we can reveal emails, instead of trying to match via bulk enrichment which was
+failing. This is a more reliable approach. 🚀

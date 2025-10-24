@@ -1,11 +1,15 @@
 # API Usability Improvements
 
 ## Problem
-The API was returning null results because the dashboard was sending old parameter names (`jobTitles`, `industries`, etc.) instead of the new Apollo API parameter names (`person_titles`, `person_locations`, etc.).
+
+The API was returning null results because the dashboard was sending old parameter names
+(`jobTitles`, `industries`, etc.) instead of the new Apollo API parameter names (`person_titles`,
+`person_locations`, etc.).
 
 ## Solutions Implemented
 
 ### 1. Fixed Parameter Mapping
+
 - **File**: `src/app/dashboard/page.tsx`
 - **Issue**: Dashboard was sending old parameter names
 - **Fix**: Updated to send correct Apollo API parameter names:
@@ -15,6 +19,7 @@ The API was returning null results because the dashboard was sending old paramet
   - `industries` → Added to `keywords` for broader search
 
 ### 2. Enhanced AI Query Parser
+
 - **File**: `src/app/api/apollo/parse-query/route.ts`
 - **Improvements**:
   - Made AI more aggressive in finding matches
@@ -26,7 +31,9 @@ The API was returning null results because the dashboard was sending old paramet
   - Be liberal with company size ranges
 
 ### 3. Added Fallback Search Strategy
-- **Files**: `src/app/api/apollo/search-people/route.ts`, `src/app/api/apollo/search-organizations/route.ts`
+
+- **Files**: `src/app/api/apollo/search-people/route.ts`,
+  `src/app/api/apollo/search-organizations/route.ts`
 - **Features**:
   - If initial search returns no results, automatically try a broader search
   - Remove restrictive filters for fallback search
@@ -34,6 +41,7 @@ The API was returning null results because the dashboard was sending old paramet
   - Comprehensive logging for debugging
 
 ### 4. Improved Error Messages
+
 - **File**: `src/app/dashboard/page.tsx`
 - **Enhancements**:
   - More helpful error messages with specific tips
@@ -42,6 +50,7 @@ The API was returning null results because the dashboard was sending old paramet
   - Suggestions for broadening search criteria
 
 ### 5. Enhanced Search Strategy
+
 - **Features**:
   - Detect very specific criteria and add broader search parameters
   - Add keywords to broaden search when needed
@@ -51,18 +60,21 @@ The API was returning null results because the dashboard was sending old paramet
 ## Key Improvements
 
 ### Broader Search Results
+
 - AI parser now casts a wider net by default
 - Fallback search automatically triggered when no results found
 - More liberal parameter interpretation
 - Better keyword extraction and expansion
 
 ### Better User Experience
+
 - Clear error messages with actionable tips
 - Automatic fallback searches
 - More comprehensive parameter support
 - Better debugging information
 
 ### Technical Enhancements
+
 - Proper parameter mapping between UI and API
 - Comprehensive error handling
 - Fallback mechanisms for better results
@@ -71,6 +83,7 @@ The API was returning null results because the dashboard was sending old paramet
 ## Usage Examples
 
 ### Before (Returning Null)
+
 ```json
 {
   "jobTitles": ["CTO"],
@@ -80,6 +93,7 @@ The API was returning null results because the dashboard was sending old paramet
 ```
 
 ### After (Working Correctly)
+
 ```json
 {
   "person_titles": ["CTO"],
@@ -94,6 +108,7 @@ The API was returning null results because the dashboard was sending old paramet
 ## AI Parser Improvements
 
 ### Enhanced System Prompt
+
 - More aggressive matching strategy
 - Always include similar titles
 - Expand abbreviations and variations
@@ -101,6 +116,7 @@ The API was returning null results because the dashboard was sending old paramet
 - Include both person and organization locations
 
 ### Example Transformations
+
 - "CTOs in SF" → Multiple job titles, expanded locations, keywords
 - "VP in AI startups" → Broader company size ranges, technology keywords
 - "Directors at Salesforce" → Company domain + keywords for broader search
@@ -108,6 +124,7 @@ The API was returning null results because the dashboard was sending old paramet
 ## Fallback Search Strategy
 
 ### When Initial Search Fails
+
 1. Remove restrictive filters
 2. Focus on keywords and core parameters
 3. Enable similar titles matching
@@ -115,6 +132,7 @@ The API was returning null results because the dashboard was sending old paramet
 5. Log comprehensive debugging information
 
 ### Benefits
+
 - Higher success rate for finding results
 - Better user experience
 - Automatic optimization
@@ -123,12 +141,14 @@ The API was returning null results because the dashboard was sending old paramet
 ## Error Message Improvements
 
 ### People Search Tips
+
 - Use broader job titles
 - Add keywords
 - Remove location filters
 - Try different job titles
 
 ### Organization Search Tips
+
 - Use broader keywords
 - Remove location filters
 - Search for specific industries
@@ -142,4 +162,5 @@ The API was returning null results because the dashboard was sending old paramet
 4. **Automatic Optimization**: System automatically tries broader searches when needed
 5. **Comprehensive Logging**: Better debugging and monitoring capabilities
 
-The API is now much more usable with higher success rates for finding relevant results and better user experience when searches need refinement.
+The API is now much more usable with higher success rates for finding relevant results and better
+user experience when searches need refinement.

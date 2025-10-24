@@ -33,9 +33,7 @@ export default async function DashboardLayout({
         </header>
 
         <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-6 py-8">
-            {children}
-          </div>
+          <div className="container mx-auto px-6 py-8">{children}</div>
         </main>
       </SidebarInset>
     </SidebarProvider>

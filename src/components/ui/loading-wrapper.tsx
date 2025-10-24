@@ -18,7 +18,7 @@ export function LoadingWrapper({ children }: LoadingWrapperProps) {
     if (loadingPath && loadingPath !== pathname) {
       setIsLoading(true);
       setLoadingPath(null);
-      
+
       // Simulate loading time
       const timer = setTimeout(() => {
         setIsLoading(false);
@@ -32,12 +32,17 @@ export function LoadingWrapper({ children }: LoadingWrapperProps) {
   useEffect(() => {
     const handleLinkClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      const link = target.closest('a[href]') as HTMLAnchorElement;
-      
-      if (link && link.href && !link.href.startsWith('http') && !link.href.startsWith('mailto:')) {
+      const link = target.closest("a[href]") as HTMLAnchorElement;
+
+      if (
+        link &&
+        link.href &&
+        !link.href.startsWith("http") &&
+        !link.href.startsWith("mailto:")
+      ) {
         const url = new URL(link.href);
         const newPath = url.pathname;
-        
+
         if (newPath !== pathname) {
           setLoadingPath(newPath);
           setIsLoading(true);
@@ -45,8 +50,8 @@ export function LoadingWrapper({ children }: LoadingWrapperProps) {
       }
     };
 
-    document.addEventListener('click', handleLinkClick);
-    return () => document.removeEventListener('click', handleLinkClick);
+    document.addEventListener("click", handleLinkClick);
+    return () => document.removeEventListener("click", handleLinkClick);
   }, [pathname]);
 
   if (isLoading) {

@@ -10,10 +10,7 @@ export async function POST(request: NextRequest) {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get user from database
@@ -22,42 +19,39 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const body = await request.json();
     const {
       // Basic search
       keywords,
-      
+
       // Organization search parameters
       organization_locations,
       organization_num_employees_ranges,
       organization_ids,
       q_organization_domains_list,
       revenue_range,
-      
+
       // Technology filters
       currently_using_all_of_technology_uids,
       currently_using_any_of_technology_uids,
       currently_not_using_any_of_technology_uids,
-      
+
       // Job posting filters
       q_organization_job_titles,
       organization_job_locations,
       organization_num_jobs_range,
       organization_job_posted_at_range,
-      
+
       // Pagination
       page = 1,
       per_page = 25,
     } = body;
 
     const apolloClient = getApolloClient();
-    
+
     // Build search params - only include non-empty values
     const searchParams: any = {
       page,
@@ -68,9 +62,13 @@ export async function POST(request: NextRequest) {
     if (keywords && keywords.trim()) {
       searchParams.q_keywords = keywords.trim();
     }
-    
+
     // Organization search parameters
-    if (organization_locations && Array.isArray(organization_locations) && organization_locations.length > 0) {
+    if (
+      organization_locations &&
+      Array.isArray(organization_locations) &&
+      organization_locations.length > 0
+    ) {
       const limitedOrgLocations = organization_locations.slice(0, 10);
       if (organization_locations.length > 10) {
         console.log(
@@ -79,20 +77,36 @@ export async function POST(request: NextRequest) {
       }
       searchParams.organization_locations = limitedOrgLocations;
     }
-    
-    if (organization_num_employees_ranges && Array.isArray(organization_num_employees_ranges) && organization_num_employees_ranges.length > 0) {
-      searchParams.organization_num_employees_ranges = organization_num_employees_ranges;
+
+    if (
+      organization_num_employees_ranges &&
+      Array.isArray(organization_num_employees_ranges) &&
+      organization_num_employees_ranges.length > 0
+    ) {
+      searchParams.organization_num_employees_ranges =
+        organization_num_employees_ranges;
     }
-    
-    if (organization_ids && Array.isArray(organization_ids) && organization_ids.length > 0) {
+
+    if (
+      organization_ids &&
+      Array.isArray(organization_ids) &&
+      organization_ids.length > 0
+    ) {
       searchParams.organization_ids = organization_ids;
     }
-    
-    if (q_organization_domains_list && Array.isArray(q_organization_domains_list) && q_organization_domains_list.length > 0) {
+
+    if (
+      q_organization_domains_list &&
+      Array.isArray(q_organization_domains_list) &&
+      q_organization_domains_list.length > 0
+    ) {
       searchParams.q_organization_domains_list = q_organization_domains_list;
     }
-    
-    if (revenue_range && (revenue_range.min !== undefined || revenue_range.max !== undefined)) {
+
+    if (
+      revenue_range &&
+      (revenue_range.min !== undefined || revenue_range.max !== undefined)
+    ) {
       searchParams.revenue_range = {};
       if (revenue_range.min !== undefined) {
         searchParams.revenue_range.min = revenue_range.min;
@@ -101,54 +115,92 @@ export async function POST(request: NextRequest) {
         searchParams.revenue_range.max = revenue_range.max;
       }
     }
-    
+
     // Technology filters
-    if (currently_using_all_of_technology_uids && Array.isArray(currently_using_all_of_technology_uids) && currently_using_all_of_technology_uids.length > 0) {
-      searchParams.currently_using_all_of_technology_uids = currently_using_all_of_technology_uids;
+    if (
+      currently_using_all_of_technology_uids &&
+      Array.isArray(currently_using_all_of_technology_uids) &&
+      currently_using_all_of_technology_uids.length > 0
+    ) {
+      searchParams.currently_using_all_of_technology_uids =
+        currently_using_all_of_technology_uids;
     }
-    
-    if (currently_using_any_of_technology_uids && Array.isArray(currently_using_any_of_technology_uids) && currently_using_any_of_technology_uids.length > 0) {
-      searchParams.currently_using_any_of_technology_uids = currently_using_any_of_technology_uids;
+
+    if (
+      currently_using_any_of_technology_uids &&
+      Array.isArray(currently_using_any_of_technology_uids) &&
+      currently_using_any_of_technology_uids.length > 0
+    ) {
+      searchParams.currently_using_any_of_technology_uids =
+        currently_using_any_of_technology_uids;
     }
-    
-    if (currently_not_using_any_of_technology_uids && Array.isArray(currently_not_using_any_of_technology_uids) && currently_not_using_any_of_technology_uids.length > 0) {
-      searchParams.currently_not_using_any_of_technology_uids = currently_not_using_any_of_technology_uids;
+
+    if (
+      currently_not_using_any_of_technology_uids &&
+      Array.isArray(currently_not_using_any_of_technology_uids) &&
+      currently_not_using_any_of_technology_uids.length > 0
+    ) {
+      searchParams.currently_not_using_any_of_technology_uids =
+        currently_not_using_any_of_technology_uids;
     }
-    
+
     // Job posting filters
-    if (q_organization_job_titles && Array.isArray(q_organization_job_titles) && q_organization_job_titles.length > 0) {
+    if (
+      q_organization_job_titles &&
+      Array.isArray(q_organization_job_titles) &&
+      q_organization_job_titles.length > 0
+    ) {
       searchParams.q_organization_job_titles = q_organization_job_titles;
     }
-    
-    if (organization_job_locations && Array.isArray(organization_job_locations) && organization_job_locations.length > 0) {
+
+    if (
+      organization_job_locations &&
+      Array.isArray(organization_job_locations) &&
+      organization_job_locations.length > 0
+    ) {
       searchParams.organization_job_locations = organization_job_locations;
     }
-    
-    if (organization_num_jobs_range && (organization_num_jobs_range.min !== undefined || organization_num_jobs_range.max !== undefined)) {
+
+    if (
+      organization_num_jobs_range &&
+      (organization_num_jobs_range.min !== undefined ||
+        organization_num_jobs_range.max !== undefined)
+    ) {
       searchParams.organization_num_jobs_range = {};
       if (organization_num_jobs_range.min !== undefined) {
-        searchParams.organization_num_jobs_range.min = organization_num_jobs_range.min;
+        searchParams.organization_num_jobs_range.min =
+          organization_num_jobs_range.min;
       }
       if (organization_num_jobs_range.max !== undefined) {
-        searchParams.organization_num_jobs_range.max = organization_num_jobs_range.max;
+        searchParams.organization_num_jobs_range.max =
+          organization_num_jobs_range.max;
       }
     }
-    
-    if (organization_job_posted_at_range && (organization_job_posted_at_range.min || organization_job_posted_at_range.max)) {
+
+    if (
+      organization_job_posted_at_range &&
+      (organization_job_posted_at_range.min ||
+        organization_job_posted_at_range.max)
+    ) {
       searchParams.organization_job_posted_at_range = {};
       if (organization_job_posted_at_range.min) {
-        searchParams.organization_job_posted_at_range.min = organization_job_posted_at_range.min;
+        searchParams.organization_job_posted_at_range.min =
+          organization_job_posted_at_range.min;
       }
       if (organization_job_posted_at_range.max) {
-        searchParams.organization_job_posted_at_range.max = organization_job_posted_at_range.max;
+        searchParams.organization_job_posted_at_range.max =
+          organization_job_posted_at_range.max;
       }
     }
 
     // Log the search parameters for debugging
-    console.log("🏢 Apollo Organization Search Params:", JSON.stringify(searchParams, null, 2));
-    
+    console.log(
+      "🏢 Apollo Organization Search Params:",
+      JSON.stringify(searchParams, null, 2)
+    );
+
     // Validate that we have at least one search criterion
-    const hasSearchCriteria = 
+    const hasSearchCriteria =
       searchParams.q_keywords ||
       searchParams.organization_locations ||
       searchParams.organization_num_employees_ranges ||
@@ -169,15 +221,17 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     // Search for organizations
     let response = await apolloClient.searchOrganizations(searchParams);
     let organizations = response.organizations || [];
 
     // If no results found, try a broader search
     if (organizations.length === 0) {
-      console.log("🔄 Apollo Organization Search - No results found, trying broader search...");
-      
+      console.log(
+        "🔄 Apollo Organization Search - No results found, trying broader search..."
+      );
+
       // Create a broader search by focusing on keywords and removing restrictive filters
       const broaderParams = {
         q_keywords: searchParams.q_keywords,
@@ -186,21 +240,31 @@ export async function POST(request: NextRequest) {
         per_page: searchParams.per_page,
       };
 
-      console.log("🔍 Apollo Organization Search - Broader search params:", JSON.stringify(broaderParams, null, 2));
-      
+      console.log(
+        "🔍 Apollo Organization Search - Broader search params:",
+        JSON.stringify(broaderParams, null, 2)
+      );
+
       try {
         response = await apolloClient.searchOrganizations(broaderParams);
         organizations = response.organizations || [];
-        console.log(`📈 Apollo Organization Search - Broader search found ${organizations.length} organizations`);
+        console.log(
+          `📈 Apollo Organization Search - Broader search found ${organizations.length} organizations`
+        );
       } catch (error) {
-        console.log("⚠️ Apollo Organization Search - Broader search also failed:", error);
+        console.log(
+          "⚠️ Apollo Organization Search - Broader search also failed:",
+          error
+        );
       }
     }
 
     // Convert organizations to a format similar to leads for consistency
     const savedOrganizations = [];
 
-    console.log(`🏢 Organization search complete. Found ${organizations.length} organizations.`);
+    console.log(
+      `🏢 Organization search complete. Found ${organizations.length} organizations.`
+    );
 
     // Process each organization
     for (const org of organizations) {
@@ -234,7 +298,9 @@ export async function POST(request: NextRequest) {
       savedOrganizations.push(organizationRecord);
     }
 
-    console.log(`\n✨ Organization search complete. Found ${savedOrganizations.length} organizations.`);
+    console.log(
+      `\n✨ Organization search complete. Found ${savedOrganizations.length} organizations.`
+    );
 
     return NextResponse.json({
       success: true,
@@ -245,7 +311,12 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Apollo organization search error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to search organizations" },
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to search organizations",
+      },
       { status: 500 }
     );
   }

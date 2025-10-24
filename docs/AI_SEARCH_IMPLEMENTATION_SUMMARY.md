@@ -2,26 +2,31 @@
 
 ## 🎯 What Was Built
 
-A natural language-powered lead search system that transforms simple queries like "VP in SF" into sophisticated, multi-parameter searches without requiring users to navigate complex dropdown menus.
+A natural language-powered lead search system that transforms simple queries like "VP in SF" into
+sophisticated, multi-parameter searches without requiring users to navigate complex dropdown menus.
 
 ## ✨ Key Features
 
 ### 1. **Natural Language Input**
+
 - Users type simple queries like "VP in SF", "CTOs in AI startups", "Product managers in NY"
 - No need to memorize field names or exact terminology
 - Supports complex multi-part queries
 
 ### 2. **AI-Powered Parsing**
+
 - Uses OpenAI's Claude 3.5 Sonnet model
 - Intelligently extracts job titles, locations, industries, company sizes, and keywords
 - Normalizes abbreviations and variations automatically
 
 ### 3. **Parameter Visualization**
+
 - Shows users exactly what the AI extracted before searching
 - Green success box displays parsed parameters
 - Users can review and adjust if needed
 
 ### 4. **Dual Search Modes**
+
 - **AI Search Tab**: Simple, fast natural language queries (default)
 - **Advanced Tab**: Traditional multi-select interface for power users
 - Users can switch between modes seamlessly
@@ -29,6 +34,7 @@ A natural language-powered lead search system that transforms simple queries lik
 ## 📁 Files Modified/Created
 
 ### New Files
+
 ```
 src/app/api/apollo/parse-query/route.ts          - AI query parser API endpoint
 AI_SEARCH_FEATURE.md                              - Detailed feature documentation
@@ -36,6 +42,7 @@ AI_SEARCH_IMPLEMENTATION_SUMMARY.md               - This file
 ```
 
 ### Modified Files
+
 ```
 src/app/dashboard/page.tsx                        - Added AI search UI and handlers
 ```
@@ -99,14 +106,16 @@ src/app/dashboard/page.tsx                        - Added AI search UI and handl
 ## 💡 Examples
 
 ### Example 1: Quick Location Search
+
 ```
 Input:  "VP in SF"
-Output: 
+Output:
   - Job Titles: [VP of Engineering]
   - Locations: [San Francisco]
 ```
 
 ### Example 2: Startup Focus
+
 ```
 Input:  "CTOs in AI startups"
 Output:
@@ -117,6 +126,7 @@ Output:
 ```
 
 ### Example 3: Complex Requirements
+
 ```
 Input:  "Senior product managers in tech companies in NY with 100+ employees"
 Output:
@@ -129,18 +139,21 @@ Output:
 ## 📊 Normalization Examples
 
 ### Job Titles
+
 - "VP" → "VP of Engineering"
 - "Manager" → "Engineering Manager"
 - "CTO" → "CTO" (no change needed)
 - "PM" → "Product Manager"
 
 ### Industries
+
 - "Tech" → "Computer Software"
 - "Startup" → "Internet"
 - "AI" → "Computer Software"
 - "Finance" → "Financial Services"
 
 ### Locations
+
 - "SF" → "San Francisco"
 - "NYC" → "New York"
 - "UK" → "United Kingdom"
@@ -151,6 +164,7 @@ Output:
 ### POST `/api/apollo/parse-query`
 
 **Request**:
+
 ```json
 {
   "query": "VP in SF"
@@ -158,6 +172,7 @@ Output:
 ```
 
 **Response (Success - 200)**:
+
 ```json
 {
   "success": true,
@@ -173,6 +188,7 @@ Output:
 ```
 
 **Response (Error - 400/500)**:
+
 ```json
 {
   "error": "Query is required"
@@ -209,6 +225,7 @@ Output:
 #### Setup
 
 1. Ensure `OPENAI_API_KEY` is in `.env.local`:
+
    ```bash
    OPENAI_API_KEY=sk-your-key-here
    ```
@@ -229,6 +246,7 @@ curl -X POST http://localhost:3000/api/apollo/parse-query \
 #### Console Logging
 
 When testing, check browser console (F12) for:
+
 ```
 🤖 AI Query Parser - Input query: VP in SF
 🔄 AI Query Parser - Sending to OpenAI...
@@ -238,37 +256,45 @@ When testing, check browser console (F12) for:
 
 ## 📈 Performance
 
-| Operation | Time | Cost |
-|-----------|------|------|
-| Parse Query (AI) | 1-2s | $0.001-0.002 |
-| Search Leads (Apollo) | 3-5s | Depends on plan |
-| **Total** | **~5-7s** | **Depends** |
+| Operation             | Time      | Cost            |
+| --------------------- | --------- | --------------- |
+| Parse Query (AI)      | 1-2s      | $0.001-0.002    |
+| Search Leads (Apollo) | 3-5s      | Depends on plan |
+| **Total**             | **~5-7s** | **Depends**     |
 
 ## 🛠️ Troubleshooting
 
 ### Problem: "OPENAI_API_KEY environment variable is not set"
+
 **Solution**: Add your OpenAI API key to `.env.local`
 
 ### Problem: "Query is required"
+
 **Solution**: Enter a non-empty search query
 
 ### Problem: AI parsing takes too long
+
 **Solution**: OpenAI rate limits - wait a few seconds and retry
 
 ### Problem: No leads found
+
 **Possible Causes**:
+
 1. Criteria too specific
 2. Apollo credits exhausted
 3. GDPR restrictions prevent email revelation
 4. No matching contacts in Apollo database
 
 **Solutions**:
+
 1. Try a broader query
 2. Check Apollo dashboard for credit balance
 3. Switch to Advanced tab for manual control
 
 ### Problem: Wrong parameters parsed
+
 **Solution**:
+
 1. Try rephrasing your query
 2. Use more specific terms
 3. Switch to Advanced tab for manual selection
@@ -291,6 +317,7 @@ When testing, check browser console (F12) for:
 ## 🎓 Natural Language Query Tips
 
 ### ✅ Good Queries
+
 - "VP of Sales in California"
 - "CTO in AI startups"
 - "Product managers in tech with 50-200 employees"
@@ -298,6 +325,7 @@ When testing, check browser console (F12) for:
 - "Marketing directors in Europe"
 
 ### ❌ Avoid
+
 - "people" (too vague)
 - "jobs" (ambiguous)
 - "tech people" (unclear what you want)
@@ -336,4 +364,6 @@ When testing, check browser console (F12) for:
 
 ## ✅ Implementation Complete
 
-The AI-powered search feature is now fully implemented and ready for use. Users can search for leads using natural language queries instead of complex filter dropdowns, dramatically improving the user experience.
+The AI-powered search feature is now fully implemented and ready for use. Users can search for leads
+using natural language queries instead of complex filter dropdowns, dramatically improving the user
+experience.

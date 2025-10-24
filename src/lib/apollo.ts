@@ -3,14 +3,14 @@ import axios, { AxiosInstance } from "axios";
 export interface ApolloSearchParams {
   // Basic search
   q_keywords?: string;
-  
+
   // People search parameters
   person_titles?: string[];
   person_seniorities?: string[];
   person_locations?: string[];
   include_similar_titles?: boolean;
   contact_email_status?: string[];
-  
+
   // Organization search parameters
   organization_locations?: string[];
   organization_num_employees_ranges?: string[];
@@ -20,12 +20,12 @@ export interface ApolloSearchParams {
     min?: number;
     max?: number;
   };
-  
+
   // Technology filters
   currently_using_all_of_technology_uids?: string[];
   currently_using_any_of_technology_uids?: string[];
   currently_not_using_any_of_technology_uids?: string[];
-  
+
   // Job posting filters
   q_organization_job_titles?: string[];
   organization_job_locations?: string[];
@@ -37,7 +37,7 @@ export interface ApolloSearchParams {
     min?: string;
     max?: string;
   };
-  
+
   // Pagination
   page?: number;
   per_page?: number;
@@ -64,7 +64,7 @@ export interface ApolloOrganization {
 export interface OrganizationSearchParams {
   // Basic search
   q_keywords?: string;
-  
+
   // Organization search parameters
   organization_locations?: string[];
   organization_num_employees_ranges?: string[];
@@ -74,12 +74,12 @@ export interface OrganizationSearchParams {
     min?: number;
     max?: number;
   };
-  
+
   // Technology filters
   currently_using_all_of_technology_uids?: string[];
   currently_using_any_of_technology_uids?: string[];
   currently_not_using_any_of_technology_uids?: string[];
-  
+
   // Job posting filters
   q_organization_job_titles?: string[];
   organization_job_locations?: string[];
@@ -91,7 +91,7 @@ export interface OrganizationSearchParams {
     min?: string;
     max?: string;
   };
-  
+
   // Pagination
   page?: number;
   per_page?: number;
@@ -290,35 +290,42 @@ class ApolloClient {
     params: ApolloSearchParams
   ): Promise<ApolloSearchResponse> {
     try {
-      console.log("🔍 Apollo Search - Input params:", JSON.stringify(params, null, 2));
-      
+      console.log(
+        "🔍 Apollo Search - Input params:",
+        JSON.stringify(params, null, 2)
+      );
+
       // Build the search payload with all supported parameters
       const searchPayload: any = {
         // Basic search
         q_keywords: params.q_keywords,
-        
+
         // People search parameters
         person_titles: params.person_titles,
         person_seniorities: params.person_seniorities,
         person_locations: params.person_locations,
         include_similar_titles: params.include_similar_titles,
         contact_email_status: params.contact_email_status,
-        
+
         // Organization search parameters
         organization_locations: params.organization_locations,
-        organization_num_employees_ranges: params.organization_num_employees_ranges,
+        organization_num_employees_ranges:
+          params.organization_num_employees_ranges,
         organization_ids: params.organization_ids,
         q_organization_domains_list: params.q_organization_domains_list,
-        
+
         // Technology filters
-        currently_using_all_of_technology_uids: params.currently_using_all_of_technology_uids,
-        currently_using_any_of_technology_uids: params.currently_using_any_of_technology_uids,
-        currently_not_using_any_of_technology_uids: params.currently_not_using_any_of_technology_uids,
-        
+        currently_using_all_of_technology_uids:
+          params.currently_using_all_of_technology_uids,
+        currently_using_any_of_technology_uids:
+          params.currently_using_any_of_technology_uids,
+        currently_not_using_any_of_technology_uids:
+          params.currently_not_using_any_of_technology_uids,
+
         // Job posting filters
         q_organization_job_titles: params.q_organization_job_titles,
         organization_job_locations: params.organization_job_locations,
-        
+
         // Pagination
         page: params.page,
         per_page: params.per_page,
@@ -327,30 +334,34 @@ class ApolloClient {
       // Add revenue range if provided
       if (params.revenue_range) {
         if (params.revenue_range.min !== undefined) {
-          searchPayload['revenue_range[min]'] = params.revenue_range.min;
+          searchPayload["revenue_range[min]"] = params.revenue_range.min;
         }
         if (params.revenue_range.max !== undefined) {
-          searchPayload['revenue_range[max]'] = params.revenue_range.max;
+          searchPayload["revenue_range[max]"] = params.revenue_range.max;
         }
       }
 
       // Add organization job range if provided
       if (params.organization_num_jobs_range) {
         if (params.organization_num_jobs_range.min !== undefined) {
-          searchPayload['organization_num_jobs_range[min]'] = params.organization_num_jobs_range.min;
+          searchPayload["organization_num_jobs_range[min]"] =
+            params.organization_num_jobs_range.min;
         }
         if (params.organization_num_jobs_range.max !== undefined) {
-          searchPayload['organization_num_jobs_range[max]'] = params.organization_num_jobs_range.max;
+          searchPayload["organization_num_jobs_range[max]"] =
+            params.organization_num_jobs_range.max;
         }
       }
 
       // Add organization job posted at range if provided
       if (params.organization_job_posted_at_range) {
         if (params.organization_job_posted_at_range.min) {
-          searchPayload['organization_job_posted_at_range[min]'] = params.organization_job_posted_at_range.min;
+          searchPayload["organization_job_posted_at_range[min]"] =
+            params.organization_job_posted_at_range.min;
         }
         if (params.organization_job_posted_at_range.max) {
-          searchPayload['organization_job_posted_at_range[max]'] = params.organization_job_posted_at_range.max;
+          searchPayload["organization_job_posted_at_range[max]"] =
+            params.organization_job_posted_at_range.max;
         }
       }
 
@@ -359,29 +370,39 @@ class ApolloClient {
 
       // Remove undefined values
       Object.keys(searchPayload).forEach(key => {
-        if (searchPayload[key] === undefined || 
-            (Array.isArray(searchPayload[key]) && searchPayload[key].length === 0)) {
+        if (
+          searchPayload[key] === undefined ||
+          (Array.isArray(searchPayload[key]) && searchPayload[key].length === 0)
+        ) {
           delete searchPayload[key];
         }
       });
 
-      console.log("📤 Apollo Search - Full request payload:", JSON.stringify(searchPayload, null, 2));
-      
+      console.log(
+        "📤 Apollo Search - Full request payload:",
+        JSON.stringify(searchPayload, null, 2)
+      );
+
       const response = await this.client.post<ApolloSearchResponse>(
-        '/mixed_people/search',
+        "/mixed_people/search",
         searchPayload
       );
-      
+
       console.log("✅ Apollo Search - Response received:", {
         total_entries: response.data.pagination?.total_entries,
-        returned_count: response.data.contacts?.length || response.data.people?.length,
-        has_emails: (response.data.people || response.data.contacts || []).some(c => c.email && !c.email.includes("email_not_unlocked")),
+        returned_count:
+          response.data.contacts?.length || response.data.people?.length,
+        has_emails: (response.data.people || response.data.contacts || []).some(
+          c => c.email && !c.email.includes("email_not_unlocked")
+        ),
       });
 
       // Log individual contact email status
       const contacts = response.data.people || response.data.contacts || [];
       contacts.forEach((contact, idx) => {
-        console.log(`  Contact ${idx + 1}: ${contact.first_name} ${contact.last_name} - Email: ${contact.email || 'NO EMAIL'}`);
+        console.log(
+          `  Contact ${idx + 1}: ${contact.first_name} ${contact.last_name} - Email: ${contact.email || "NO EMAIL"}`
+        );
       });
 
       return response.data;
@@ -393,16 +414,19 @@ class ApolloClient {
           data: error.response?.data,
           message: error.message,
         });
-        
-        const errorMessage = error.response?.data?.message || 
-                           error.response?.data?.error || 
-                           JSON.stringify(error.response?.data) ||
-                           error.message;
+
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          JSON.stringify(error.response?.data) ||
+          error.message;
 
         // Handle specific error cases
         if (error.response?.status === 422) {
-          if (error.response?.data?.error?.includes("Value too long") || 
-              error.response?.data?.error === "Value too long") {
+          if (
+            error.response?.data?.error?.includes("Value too long") ||
+            error.response?.data?.error === "Value too long"
+          ) {
             console.error(
               "⚠️ Apollo API Limit Error: Parameters are too long or too many items in arrays."
             );
@@ -428,13 +452,16 @@ class ApolloClient {
   async enrichContact(email: string): Promise<ApolloEnrichResponse> {
     try {
       console.log("🔧 Apollo Enrich by Email - Email:", email);
-      
+
       const requestBody = {
         email,
         reveal_personal_emails: true,
       };
-      
-      const response = await this.client.post<ApolloEnrichResponse>('/people/match', requestBody);
+
+      const response = await this.client.post<ApolloEnrichResponse>(
+        "/people/match",
+        requestBody
+      );
 
       console.log("✅ Apollo Enrich - Response:", {
         name: response.data.person?.name,
@@ -466,19 +493,21 @@ class ApolloClient {
   async getContactById(id: string): Promise<ApolloEnrichResponse> {
     try {
       console.log("🔧 Apollo Enrich by ID - Contact ID:", id);
-      
+
       // Use the People Enrichment endpoint with the contact ID
-      const response = await this.client.get('/people/match', {
+      const response = await this.client.get("/people/match", {
         params: {
           id: id,
           reveal_personal_emails: true,
-        }
+        },
       });
 
       console.log("✅ Apollo Enrich by ID - Full Response:", {
         name: response.data.person?.name,
         email: response.data.person?.email,
-        has_email: !!response.data.person?.email && !response.data.person.email.includes("email_not_unlocked"),
+        has_email:
+          !!response.data.person?.email &&
+          !response.data.person.email.includes("email_not_unlocked"),
         response_status: response.status,
       });
 
@@ -512,11 +541,13 @@ class ApolloClient {
     try {
       // Limit to 10 contacts per request as per Apollo API limits
       if (details.length > 10) {
-        console.warn(`⚠️ Bulk Enrich - Requested ${details.length} contacts, limiting to 10`);
+        console.warn(
+          `⚠️ Bulk Enrich - Requested ${details.length} contacts, limiting to 10`
+        );
       }
 
       const limitedDetails = details.slice(0, 10);
-      
+
       console.log(
         `🔧 Apollo Bulk Enrich - Enriching ${limitedDetails.length} contacts with single API call`
       );
@@ -572,28 +603,35 @@ class ApolloClient {
     params: OrganizationSearchParams
   ): Promise<OrganizationSearchResponse> {
     try {
-      console.log("🏢 Apollo Organization Search - Input params:", JSON.stringify(params, null, 2));
+      console.log(
+        "🏢 Apollo Organization Search - Input params:",
+        JSON.stringify(params, null, 2)
+      );
 
       // Build the search payload with all supported parameters
       const searchPayload: any = {
         // Basic search
         q_keywords: params.q_keywords,
-        
+
         // Organization search parameters
         organization_locations: params.organization_locations,
-        organization_num_employees_ranges: params.organization_num_employees_ranges,
+        organization_num_employees_ranges:
+          params.organization_num_employees_ranges,
         organization_ids: params.organization_ids,
         q_organization_domains_list: params.q_organization_domains_list,
-        
+
         // Technology filters
-        currently_using_all_of_technology_uids: params.currently_using_all_of_technology_uids,
-        currently_using_any_of_technology_uids: params.currently_using_any_of_technology_uids,
-        currently_not_using_any_of_technology_uids: params.currently_not_using_any_of_technology_uids,
-        
+        currently_using_all_of_technology_uids:
+          params.currently_using_all_of_technology_uids,
+        currently_using_any_of_technology_uids:
+          params.currently_using_any_of_technology_uids,
+        currently_not_using_any_of_technology_uids:
+          params.currently_not_using_any_of_technology_uids,
+
         // Job posting filters
         q_organization_job_titles: params.q_organization_job_titles,
         organization_job_locations: params.organization_job_locations,
-        
+
         // Pagination
         page: params.page,
         per_page: params.per_page,
@@ -602,30 +640,34 @@ class ApolloClient {
       // Add revenue range if provided
       if (params.revenue_range) {
         if (params.revenue_range.min !== undefined) {
-          searchPayload['revenue_range[min]'] = params.revenue_range.min;
+          searchPayload["revenue_range[min]"] = params.revenue_range.min;
         }
         if (params.revenue_range.max !== undefined) {
-          searchPayload['revenue_range[max]'] = params.revenue_range.max;
+          searchPayload["revenue_range[max]"] = params.revenue_range.max;
         }
       }
 
       // Add organization job range if provided
       if (params.organization_num_jobs_range) {
         if (params.organization_num_jobs_range.min !== undefined) {
-          searchPayload['organization_num_jobs_range[min]'] = params.organization_num_jobs_range.min;
+          searchPayload["organization_num_jobs_range[min]"] =
+            params.organization_num_jobs_range.min;
         }
         if (params.organization_num_jobs_range.max !== undefined) {
-          searchPayload['organization_num_jobs_range[max]'] = params.organization_num_jobs_range.max;
+          searchPayload["organization_num_jobs_range[max]"] =
+            params.organization_num_jobs_range.max;
         }
       }
 
       // Add organization job posted at range if provided
       if (params.organization_job_posted_at_range) {
         if (params.organization_job_posted_at_range.min) {
-          searchPayload['organization_job_posted_at_range[min]'] = params.organization_job_posted_at_range.min;
+          searchPayload["organization_job_posted_at_range[min]"] =
+            params.organization_job_posted_at_range.min;
         }
         if (params.organization_job_posted_at_range.max) {
-          searchPayload['organization_job_posted_at_range[max]'] = params.organization_job_posted_at_range.max;
+          searchPayload["organization_job_posted_at_range[max]"] =
+            params.organization_job_posted_at_range.max;
         }
       }
 
@@ -634,13 +676,18 @@ class ApolloClient {
 
       // Remove undefined values
       Object.keys(searchPayload).forEach(key => {
-        if (searchPayload[key] === undefined || 
-            (Array.isArray(searchPayload[key]) && searchPayload[key].length === 0)) {
+        if (
+          searchPayload[key] === undefined ||
+          (Array.isArray(searchPayload[key]) && searchPayload[key].length === 0)
+        ) {
           delete searchPayload[key];
         }
       });
 
-      console.log("📤 Apollo Organization Search - Full request payload:", JSON.stringify(searchPayload, null, 2));
+      console.log(
+        "📤 Apollo Organization Search - Full request payload:",
+        JSON.stringify(searchPayload, null, 2)
+      );
 
       const response = await this.client.post<OrganizationSearchResponse>(
         "/organizations/search",
@@ -672,7 +719,9 @@ class ApolloClient {
           error.response?.data?.error ||
           JSON.stringify(error.response?.data) ||
           error.message;
-        throw new Error(`Apollo Organization Search API error: ${errorMessage}`);
+        throw new Error(
+          `Apollo Organization Search API error: ${errorMessage}`
+        );
       }
       console.error("❌ Apollo Organization Search - Unexpected error:", error);
       throw error;
@@ -693,26 +742,32 @@ class ApolloClient {
     per_page?: number;
   }): Promise<ApolloSearchResponse> {
     try {
-      console.log("🔗 Apollo Hybrid Search - Starting organization search first...");
+      console.log(
+        "🔗 Apollo Hybrid Search - Starting organization search first..."
+      );
 
       // Step 1: Search for organizations based on org-level criteria
       const orgSearchParams: OrganizationSearchParams = {
         q_keywords: params.industry_keywords?.join(" "),
         organization_locations: params.organization_locations,
-        organization_num_employees_ranges: params.organization_num_employees_ranges,
+        organization_num_employees_ranges:
+          params.organization_num_employees_ranges,
         page: 1,
         per_page: 100, // Get more orgs to search within
       };
 
       const orgResponse = await this.searchOrganizations(orgSearchParams);
-      const organizationIds = orgResponse.organizations?.map((org) => org.id) || [];
+      const organizationIds =
+        orgResponse.organizations?.map(org => org.id) || [];
 
       console.log(
         `✅ Found ${organizationIds.length} organizations, now searching for people within them...`
       );
 
       if (organizationIds.length === 0) {
-        console.log("⚠️ No organizations found, falling back to standard people search");
+        console.log(
+          "⚠️ No organizations found, falling back to standard people search"
+        );
         return this.searchContacts({
           q_keywords: params.q_keywords,
           person_titles: params.person_titles,

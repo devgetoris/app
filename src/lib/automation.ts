@@ -271,7 +271,3 @@ export async function createDefaultAutomationRule(
     isActive: true,
   });
 }
-
-
-
-
