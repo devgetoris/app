@@ -187,7 +187,7 @@ export function LeadsSearchInterface() {
         <CardContent>
           <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800 mb-6">
             <p className="text-sm text-blue-900 dark:text-blue-100">
-              💡 <strong>AI-Powered Search:</strong> Simply describe what you're
+              <strong>AI-Powered Search:</strong> Simply describe what you're
               looking for in natural language. Examples: "VP in SF", "CTOs in AI
               startups", "Product managers in NY tech companies", "Tech
               companies in SF", "AI startups with 50+ employees", "Companies

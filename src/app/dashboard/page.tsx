@@ -540,7 +540,7 @@ export default function DashboardPage() {
             {/* Advanced Search Tab */}
             <TabsContent value="advanced" className="space-y-6">
               <div className="p-3 bg-muted rounded-lg text-sm">
-                <p className="font-medium mb-1">💡 Search Tips:</p>
+                <p className="font-medium mb-1">Search Tips:</p>
                 <ul className="text-muted-foreground space-y-1 text-xs">
                   <li>
                     • Use <strong>"Select All"</strong> or click multiple items

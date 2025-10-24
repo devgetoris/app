@@ -7,6 +7,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default async function DashboardLayout({
   children,
@@ -28,6 +29,7 @@ export default async function DashboardLayout({
             <SidebarTrigger />
           </div>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <UserButton afterSignOutUrl="/" />
           </div>
         </header>
