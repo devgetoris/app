@@ -1,10 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
-import { OpenAI } from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { generateText } from "ai";
+import { openai } from "@ai-sdk/openai";
 
 interface ParsedQuery {
   // Basic search
@@ -122,27 +119,18 @@ Examples:
 
     console.log("🔄 AI Query Parser - Sending to OpenAI...");
 
-    const message = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt,
-        },
-        {
-          role: "user",
-          content: userMessage,
-        },
-      ],
-      response_format: { type: "json_object" },
+    const { text } = await generateText({
+      model: openai("gpt-4o", {
+        apiKey: process.env.OPENAI_API_KEY,
+      }),
+      system: systemPrompt,
+      prompt: userMessage,
     });
 
-    const response = message.choices[0].message.content;
-
-    console.log("✅ AI Query Parser - OpenAI response:", response);
+    console.log("✅ AI Query Parser - OpenAI response:", text);
 
     // Parse the JSON response
-    const parsedQuery = JSON.parse(response || "{}") as ParsedQuery;
+    const parsedQuery = JSON.parse(text || "{}") as ParsedQuery;
 
     // Set defaults
     const result = {

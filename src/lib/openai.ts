@@ -1,4 +1,5 @@
-import OpenAI from "openai";
+import { generateText } from "ai";
+import { openai } from "@ai-sdk/openai";
 
 export interface EmailGenerationParams {
   leadName: string;
@@ -30,10 +31,10 @@ export interface EmailGenerationResponse {
 }
 
 class OpenAIService {
-  private client: OpenAI;
+  private model: any;
 
   constructor(apiKey: string) {
-    this.client = new OpenAI({
+    this.model = openai("gpt-4o", {
       apiKey,
     });
   }
@@ -118,29 +119,19 @@ Provide the response in the following JSON format:
 }`;
 
     try {
-      const response = await this.client.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are an expert email copywriter. You write personalized, engaging B2B outreach emails that get responses. You always respond with valid JSON only.",
-          },
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
+      const { text } = await generateText({
+        model: this.model,
+        system:
+          "You are an expert email copywriter. You write personalized, engaging B2B outreach emails that get responses. You always respond with valid JSON only.",
+        prompt,
         temperature: 0.7,
-        response_format: { type: "json_object" },
       });
 
-      const content = response.choices[0].message.content;
-      if (!content) {
+      if (!text) {
         throw new Error("No content received from OpenAI");
       }
 
-      const result = JSON.parse(content) as EmailGenerationResponse;
+      const result = JSON.parse(text) as EmailGenerationResponse;
 
       return result;
     } catch (error) {
@@ -189,29 +180,19 @@ Provide an improved version in the following JSON format:
 }`;
 
     try {
-      const response = await this.client.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are an expert email copywriter. You always respond with valid JSON only.",
-          },
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
+      const { text } = await generateText({
+        model: this.model,
+        system:
+          "You are an expert email copywriter. You always respond with valid JSON only.",
+        prompt,
         temperature: 0.7,
-        response_format: { type: "json_object" },
       });
 
-      const content = response.choices[0].message.content;
-      if (!content) {
+      if (!text) {
         throw new Error("No content received from OpenAI");
       }
 
-      return JSON.parse(content) as EmailGenerationResponse;
+      return JSON.parse(text) as EmailGenerationResponse;
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`OpenAI API error: ${error.message}`);
