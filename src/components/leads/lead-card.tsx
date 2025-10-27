@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { EmailPreviewModal } from "@/components/emails/email-preview-modal";
 import {
   Building2,
   Users,
@@ -51,6 +53,8 @@ interface Lead {
 }
 
 export function LeadCard({ lead }: { lead: Lead }) {
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+
   const isOrganization = lead.recordType === "organization";
   const displayName = isOrganization
     ? lead.companyName || "Organization"
@@ -82,7 +86,7 @@ export function LeadCard({ lead }: { lead: Lead }) {
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">
         <div className="flex items-start gap-4">
-          <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-800 flex-shrink-0">
+          <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-800 shrink-0">
             {isOrganization ? (
               <div className="w-full h-full flex items-center justify-center">
                 <Building2 className="w-6 h-6 text-gray-600" />
@@ -333,12 +337,24 @@ export function LeadCard({ lead }: { lead: Lead }) {
                 View Profile
               </Button>
             </Link>
-            <Button variant="default" className="flex-1" size="sm">
+            <Button
+              variant="default"
+              className="flex-1"
+              size="sm"
+              onClick={() => setIsEmailModalOpen(true)}
+            >
               Generate Email
             </Button>
           </div>
         </div>
       </CardContent>
+
+      {/* Email Preview Modal */}
+      <EmailPreviewModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        lead={lead}
+      />
     </Card>
   );
 }

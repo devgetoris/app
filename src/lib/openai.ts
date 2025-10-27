@@ -34,9 +34,7 @@ class OpenAIService {
   private model: any;
 
   constructor(apiKey: string) {
-    this.model = openai("gpt-4o", {
-      apiKey,
-    });
+    this.model = openai("gpt-4o");
   }
 
   /**
@@ -111,7 +109,8 @@ Email Requirements:
 
 ${customPrompt || ""}
 
-Provide the response in the following JSON format:
+IMPORTANT: Respond with ONLY the JSON object below - no markdown, no code blocks, no explanations. Just the raw JSON:
+
 {
   "subject": "An attention-grabbing subject line (max 60 characters)",
   "body": "The plain text email body",
@@ -122,7 +121,7 @@ Provide the response in the following JSON format:
       const { text } = await generateText({
         model: this.model,
         system:
-          "You are an expert email copywriter. You write personalized, engaging B2B outreach emails that get responses. You always respond with valid JSON only.",
+          "You are an expert email copywriter. You write personalized, engaging B2B outreach emails that get responses. You MUST respond with ONLY valid JSON - no markdown, no code blocks, no explanations. Just the raw JSON object.",
         prompt,
         temperature: 0.7,
       });
@@ -131,9 +130,33 @@ Provide the response in the following JSON format:
         throw new Error("No content received from OpenAI");
       }
 
-      const result = JSON.parse(text) as EmailGenerationResponse;
+      // Extract JSON from the response, handling markdown code blocks
+      let jsonText = text.trim();
 
-      return result;
+      // Remove markdown code blocks if present
+      if (jsonText.startsWith("```json")) {
+        jsonText = jsonText.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+      } else if (jsonText.startsWith("```")) {
+        jsonText = jsonText.replace(/^```\s*/, "").replace(/\s*```$/, "");
+      }
+
+      // Try to find JSON object in the text if it's not pure JSON
+      const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[0];
+      }
+
+      try {
+        const result = JSON.parse(jsonText) as EmailGenerationResponse;
+        return result;
+      } catch (parseError) {
+        console.error("JSON Parse Error:", parseError);
+        console.error("Raw text:", text);
+        console.error("Processed text:", jsonText);
+        throw new Error(
+          `Failed to parse JSON response: ${parseError instanceof Error ? parseError.message : "Unknown error"}`
+        );
+      }
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`OpenAI API error: ${error.message}`);
@@ -172,7 +195,8 @@ ${currentBody}
 
 Feedback: ${feedback}
 
-Provide an improved version in the following JSON format:
+IMPORTANT: Respond with ONLY the JSON object below - no markdown, no code blocks, no explanations. Just the raw JSON:
+
 {
   "subject": "Improved subject line",
   "body": "Improved plain text email body",
@@ -183,7 +207,7 @@ Provide an improved version in the following JSON format:
       const { text } = await generateText({
         model: this.model,
         system:
-          "You are an expert email copywriter. You always respond with valid JSON only.",
+          "You are an expert email copywriter. You MUST respond with ONLY valid JSON - no markdown, no code blocks, no explanations. Just the raw JSON object.",
         prompt,
         temperature: 0.7,
       });
@@ -192,7 +216,32 @@ Provide an improved version in the following JSON format:
         throw new Error("No content received from OpenAI");
       }
 
-      return JSON.parse(text) as EmailGenerationResponse;
+      // Extract JSON from the response, handling markdown code blocks
+      let jsonText = text.trim();
+
+      // Remove markdown code blocks if present
+      if (jsonText.startsWith("```json")) {
+        jsonText = jsonText.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+      } else if (jsonText.startsWith("```")) {
+        jsonText = jsonText.replace(/^```\s*/, "").replace(/\s*```$/, "");
+      }
+
+      // Try to find JSON object in the text if it's not pure JSON
+      const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[0];
+      }
+
+      try {
+        return JSON.parse(jsonText) as EmailGenerationResponse;
+      } catch (parseError) {
+        console.error("JSON Parse Error:", parseError);
+        console.error("Raw text:", text);
+        console.error("Processed text:", jsonText);
+        throw new Error(
+          `Failed to parse JSON response: ${parseError instanceof Error ? parseError.message : "Unknown error"}`
+        );
+      }
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`OpenAI API error: ${error.message}`);

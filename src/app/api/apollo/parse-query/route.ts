@@ -120,9 +120,7 @@ Examples:
     console.log("🔄 AI Query Parser - Sending to OpenAI...");
 
     const { text } = await generateText({
-      model: openai("gpt-4o", {
-        apiKey: process.env.OPENAI_API_KEY,
-      }),
+      model: openai("gpt-4o"),
       system: systemPrompt,
       prompt: userMessage,
     });
