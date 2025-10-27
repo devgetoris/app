@@ -173,17 +173,6 @@ export function LeadsSearchInterface() {
     <div className="space-y-6">
       {/* Search Interface */}
       <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <CardTitle>Find New Leads</CardTitle>
-              <CardDescription>
-                Use AI to search for people and organizations in natural
-                language.
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
         <CardContent>
           <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800 mb-6">
             <p className="text-sm text-blue-900 dark:text-blue-100">
